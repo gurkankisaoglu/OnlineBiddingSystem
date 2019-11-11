@@ -14,14 +14,13 @@ class SellItem:
         self.itemtype = itemtype
         self.description = description
         self.bidtye = bidtype
-        self.starting = starting
         self.minbid = minbid
         self.image = image
 
         self.auction_started = False
         self.bid_records = []
         self.creation_time = time.time()
-        self.current_value = 0
+        self.current_value = starting
         self.current_bidder = None
         self.auction_start_timestamp = None
         self.auction_end_timestamp = None
@@ -38,10 +37,10 @@ class SellItem:
         self.auction_start_timestamp = time.time()
     
     def bid(self, user, amount):
-        if(amount < self.minbid):
-            raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
         if(amount < self.current_value):
             raise Exception(" Bid amount is lower than current value({}).".format(self.current_value))
+        if(amount-self.current_value < self.minbid):
+            raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
         if(user.reserve_amount(amount)):
             self.current_bidder.release(amount)
             self.current_value = amount
