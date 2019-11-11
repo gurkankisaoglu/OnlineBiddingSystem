@@ -48,6 +48,9 @@ class SellItem:
             self.auction_start_timestamp = time.time()
 
         else:
+            if self.auction_started == False:
+                raise Exception("Auction is not started yet!")
+
             if not self.current_bidder is None:
                 self.auction_started = False
                 self.current_bidder.checkout(self.current_value,self,self.owner)
