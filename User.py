@@ -1,10 +1,8 @@
 import random
 import string
 from enum import Enum
-
-class ItemType(Enum):
-    TEST = 1
-    DENEME = 2
+import secrets
+import json
 
 class ItemState(Enum):
     all = 1
@@ -13,6 +11,7 @@ class ItemState(Enum):
     sold = 3
 
 class User:
+
     def __init__(self, email, namesurname, password):
         self.email = email
         self.namesurname = namesurname
@@ -21,12 +20,51 @@ class User:
         self.reserved_balance = 0
         self.expenses = 0
         self.income = 0
-        self.items = [{'itemid':1, 'itemtype': ItemType.TEST, 'state': ItemState.active}]
+        self.verification_number = secrets.token_urlsafe(32)
+        self.items = [{'itemid':1, 'itemtype': "test", 'state': ItemState.active}]
+        print(self.verification_number)
+        self.verified = False
+        data = None
+        with open("verification.json", "r") as f:
+            data = json.load(f)
+        with open("verification.json", "w") as f:
+            data[self.email] = {"number": self.verification_number, "status": False}
+            json.dump(data,f)
+        f.close()
+
+    def __getattribute__(self, attr):
+        method = object.__getattribute__(self, attr)
+        if not method:
+            raise Exception("Method %s not implemented" % attr)
+        if method is self.isVerified:
+            return method
+        if callable(method):
+            if self.isVerified() == False:
+                with open("verification.json") as f:
+                    data = json.load(f)
+                    if data[self.email]["status"]:
+                        self.verified  = True
+                    else :
+                        raise Exception("Email is not verified!")
+
+        return method
+        
+    def isVerified(self):
+        return self.verified
 
     @staticmethod
     def verify(email, verification_number):
-        
-        pass
+        data = None
+        with open("verification.json", "r") as f:
+            data = json.load(f)
+            if data[email]["number"] == verification_number:
+                data[email]["status"] = True
+            else:
+                raise Exception("Verification number is not valid!")
+        with open("verification.json", "w") as f:
+            json.dump(data,f)
+            
+
 
     def changepassword(self, newpassword, oldpassword=None):
         if oldpassword is None:
@@ -39,18 +77,17 @@ class User:
                 print("password is wrong")
 
     def listitems(self, user, itemtype = None, state='all'):
-        user_items = user.getItems()
         ret = []
-        for item in user_items:
+        for item in self.items:
             if item["itemtype"] == itemtype and item["state"] == state:
                 ret.append(item)
-        else:
-            
-    def getItems():
+        return ret
+
+    def getItems(self):
         return self.items
 
     @staticmethod
-    def watch(itemtype=None, watchmethod):
+    def watch(itemtype, watchmethod):
         pass
 
     def addbalance(amount):
@@ -81,6 +118,7 @@ class User:
 
     def release_item(self, item):
         #release item
+        pass
 
     def reserve_amount(self, amount):
         if amount <= self.balance - self.reserved_balance:
