@@ -73,10 +73,14 @@ class User:
         self.reserved_balance -= amount
         return True
 
-    def checkout(self, amount, item):
+    def checkout(self, amount, item, owner):
         self.reserved_balance -= amount
         self.items.append(item)
+        owner.release_item(item)
         return True
+
+    def release_item(self, item):
+        #release item
 
     def reserve_amount(self, amount):
         if amount <= self.balance - self.reserved_balance:
