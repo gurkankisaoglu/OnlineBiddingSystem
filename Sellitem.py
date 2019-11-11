@@ -13,7 +13,7 @@ class SellItem:
         self.title = title
         self.itemtype = itemtype
         self.description = description
-        self.bidtye = bidtype
+        self.bidtype = bidtype
         self.minbid = minbid
         self.image = image
 
