@@ -21,6 +21,7 @@ class User:
                     args[0].verified = data[args[0].email]["status"]
                     if not args[0].verified:
                         raise Exception("Not verified")
+                return method(*args)
         return validate
 
     def __init__(self, email, namesurname, password):
@@ -32,7 +33,7 @@ class User:
         self.expenses = 0
         self.income = 0
         self.verification_number = secrets.token_urlsafe(32)
-        self.items = [{'itemid':1, 'itemtype': "test", 'state': ItemState.active}]
+        self.items = []
         print(self.verification_number)
         self.verified = False
         data = None
@@ -82,9 +83,10 @@ class User:
         pass
 
     @_validation_decorator
-    def addBalance(amount):
-        self.balane += amount
-        if amout > 0:
+    def addBalance(self, amount):
+        self.balance += amount
+
+        if amount > 0:
             self.income += amount
 
     @_validation_decorator

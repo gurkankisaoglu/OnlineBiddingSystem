@@ -10,6 +10,7 @@ class SellItem:
                 starting, minbid = 1.0, image = None ):
         
         self.owner = owner
+        self.owner.add_item(self)
         self.title = title
         self.itemtype = itemtype
         self.description = description
@@ -38,31 +39,35 @@ class SellItem:
         self.auction_start_timestamp = time.time()
     
     def bid(self, user, amount):
+        if not self.auction_started:
+            raise Exception("Auction is not started")
         if(amount < self.minbid):
             raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
         if(amount < self.current_value):
             raise Exception(" Bid amount is lower than current value({}).".format(self.current_value))
         if(user.reserve_amount(amount)):
-            self.current_bidder.release(amount)
+            if self.current_bidder:
+                self.current_bidder.release_amount(self.current_value)
             self.current_value = amount
             self.current_bidder = user
             self.bid_records.append({"bidder": user, "amount": amount,"timestamp": time.time()})
 
-            if amount >= self.stopbid:
+            if self.stopbid and  amount >= self.stopbid:
                 print("Satiyorum... Sattim!")
                 self.auction_started = False
-                self.current_bidder.checkout(amount,self.owner)
+                self.current_bidder.checkout(amount,self,self.owner)
                 self.owner = self.current_bidder
                 
         else:
             raise Exception(" User does not have this much unreserved amount.")
             
     def sell(self):
-        # OWNER SHOULD BE CHECKED, only owner can call sell()
-        self.auction_started = False
-        if self.current_value != 0 and not self.current_bidder:
-            self.current_bidder.checkout(self.current_value,self, self.owner)
-            self.owner = self.current_bidder
+        if self.auction_started:
+            # OWNER SHOULD BE CHECKED, only owner can call sell()
+            self.auction_started = False
+            if self.current_value != 0 and self.current_bidder:
+                self.current_bidder.checkout(self.current_value,self, self.owner)
+                self.owner = self.current_bidder
         
     def view(self):
         return {
