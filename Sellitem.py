@@ -26,43 +26,16 @@ class SellItem:
         self.auction_start_timestamp = None
         self.auction_end_timestamp = None
         
-        self.item_sold = False
-        self.final_value = 0
-        self.buyer = None
-        self.sell_timestamp = None
-
-    def __getattribute__(self, attr):
-        method = object.__getattribute__(self, attr)
-        if not method:
-            raise Exception("Method %s not implemented" % attr)
-        if callable(method):
-            if self.item_sold:
-                raise Exception("Item was sold to {} at {}"
-                    .format(self.buyer.namesurname,utilities.dateformatter(self.sell_timestamp)))
-
-        return method
+        self.stopbid = None
 
     def startauction(self, stopbid = None):
-        if stopbid is None:
-            self.auction_started = True
-            self.auction_start_timestamp = time.time()
+        if self.auction_started:
+            raise Exception("Auction is already started at {}".format(utilities.dateformatter(self.auction_start_timestamp)))
+        if stopbid:
+            self.stopbid = stopbid
 
-        else:
-            if self.auction_started == False:
-                raise Exception("Auction is not started yet!")
-
-            if not self.current_bidder is None:
-                self.auction_started = False
-                self.current_bidder.checkout(self.current_value,self,self.owner)
-                self.final_value = self.current_value
-                self.item_sold = True
-                self.buyer = self.current_bidder
-                self.sell_timestamp = time.time()
-                self.auction_end_timestamp = time.time()
-            else:
-                self.item_sold = True
-                self.auction_end_timestamp = time.time()
-
+        self.auction_started = True
+        self.auction_start_timestamp = time.time()
     
     def bid(self, user, amount):
         if(amount < self.minbid):
@@ -74,19 +47,23 @@ class SellItem:
             self.current_value = amount
             self.current_bidder = user
             self.bid_records.append({"bidder": user, "amount": amount,"timestamp": time.time()})
+
+            if amount >= self.stopbid:
+                print("Satiyorum... Sattim!")
+                self.auction_started = False
+                self.current_bidder.checkout(amount,self.owner)
+                self.owner = self.current_bidder
+                
         else:
             raise Exception(" User does not have this much unreserved amount.")
             
-
     def sell(self):
         # OWNER SHOULD BE CHECKED, only owner can call sell()
-        self.current_bidder.checkout(self.current_value,self, self.owner)
-        self.final_value = self.current_value
-        self.item_sold = True
-        self.buyer = self.current_bidder
-        self.sell_timestamp = time.time()
+        self.auction_started = False
+        if self.current_value != 0 and not self.current_bidder:
+            self.current_bidder.checkout(self.current_value,self, self.owner)
+            self.owner = self.current_bidder
         
-
     def view(self):
         return {
             "title": self.title,
@@ -99,12 +76,11 @@ class SellItem:
         }
 
     def watch(self, user, watchmethod):
-        pass
+        watchmethod(user)
 
     def history(self):
         return {
             "creation":  utilities.dateformatter(self.creation_time),
             "auction_start": utilities.dateformatter(self.auction_start_timestamp),
-            "bids": self.bid_records,
-            "final_value": self.final_value,
+            "bids": self.bid_records
         }
