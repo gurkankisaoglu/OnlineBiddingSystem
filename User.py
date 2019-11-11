@@ -11,6 +11,17 @@ class ItemState(Enum):
     sold = 3
 
 class User:
+    def _validation_decorator(method):
+        def validate(*args):
+            if args[0].verified:
+                return method(*args)
+            else:
+                with open("verification.json", "r") as f:
+                    data = json.load(f)
+                    args[0].verified = data[args[0].email]["status"]
+                    if not args[0].verified:
+                        raise Exception("Not verified")
+        return validate
 
     def __init__(self, email, namesurname, password):
         self.email = email
@@ -32,26 +43,6 @@ class User:
             json.dump(data,f)
         f.close()
 
-    def __getattribute__(self, attr):
-        method = object.__getattribute__(self, attr)
-        if not method:
-            raise Exception("Method %s not implemented" % attr)
-        if method is self.isVerified:
-            return method
-        if callable(method):
-            if self.isVerified() == False:
-                with open("verification.json") as f:
-                    data = json.load(f)
-                    if data[self.email]["status"]:
-                        self.verified  = True
-                    else :
-                        raise Exception("Email is not verified!")
-
-        return method
-        
-    def isVerified(self):
-        return self.verified
-
     @staticmethod
     def verify(email, verification_number):
         data = None
@@ -65,7 +56,7 @@ class User:
             json.dump(data,f)
             
 
-
+    @_validation_decorator
     def changepassword(self, newpassword, oldpassword=None):
         if oldpassword is None:
             self.password = "".join([random.choice(string.ascii_letters) for i in range(15)])
@@ -76,25 +67,27 @@ class User:
             else:
                 print("password is wrong")
 
+
+    @_validation_decorator
     def listitems(self, user, itemtype = None, state='all'):
         ret = []
-        for item in self.items:
+        for item in user.items:
             if item["itemtype"] == itemtype and item["state"] == state:
                 ret.append(item)
         return ret
 
-    def getItems(self):
-        return self.items
-
     @staticmethod
     def watch(itemtype, watchmethod):
+
         pass
 
-    def addbalance(amount):
+    @_validation_decorator
+    def addBalance(amount):
         self.balane += amount
         if amout > 0:
             self.income += amount
 
+    @_validation_decorator
     def report(self):
         items_sold = [i for i in self.items if self.items['state'] == ItemState.sold]
         items_onsale = [i for i in self.items if self.items['state'] == ItemState.active]
@@ -106,20 +99,37 @@ class User:
             "income": self.income
         }
 
+    @_validation_decorator
+    def sell_item(self, item):
+        if item in self.items:
+            item.sell()
+        else:
+            raise Exception("Cannot be sold")
+
+    @_validation_decorator
     def release_amount(self, amount):
         self.reserved_balance -= amount
-        return True
 
+    @_validation_decorator
     def checkout(self, amount, item, owner):
         self.reserved_balance -= amount
-        self.items.append(item)
+        self.balance -= amount
+        owner.addBalance(amount)
         owner.release_item(item)
-        return True
+        self.add_item(item)
 
+    @_validation_decorator
     def release_item(self, item):
-        #release item
-        pass
+        try:
+            self.items.remove(item)
+        except ValueError(e):
+            raise Exception("item not found")
+    
+    @_validation_decorator
+    def add_item(self, item):
+        self.items.append(item)
 
+    @_validation_decorator
     def reserve_amount(self, amount):
         if amount <= self.balance - self.reserved_balance:
             self.reserved_balance += amount
