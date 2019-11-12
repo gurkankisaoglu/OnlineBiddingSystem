@@ -1,7 +1,6 @@
 import time
 import datetime
 import utilities
-from User import User
 from utilities import NotificationModule
 
 class SellItem:
@@ -103,6 +102,6 @@ class SellItem:
             "bids": self.bid_records
         }
 
-    def notify_user(self):
+    def notify_user(self,descr=""):
         for user in self.callbacks:
             self.callbacks[user]("Item state changed")

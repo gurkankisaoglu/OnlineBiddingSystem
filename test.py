@@ -13,11 +13,13 @@ buyer2 = User("buyer2", "asd2", "ppp2")
 token = input("enter token\n")
 User.verify("buyer2", token)
 
+User.watch("typ",buyer.notification)
 
 buyer.addBalance(1000)
 buyer2.addBalance(5000)
 
 item = SellItem(owner,"title", "typ", "desc", "inc", 10, 2.0)
+item.watch(buyer2,buyer2.notification)
 
 try:
     item.bid(buyer,5)
@@ -41,19 +43,6 @@ try:
 except Exception as e:
     print(e)
 
-print(buyer.reserved_balance)
-print(buyer.balance)
 
-print(buyer2.reserved_balance)
-print(buyer2.balance)
 
-item.sell()
 
-print(buyer.reserved_balance)
-print(buyer.balance)
-
-print(buyer2.reserved_balance)
-print(buyer2.balance)
-
-print(buyer2.items[0].title)
-print(owner.items)

@@ -15,7 +15,7 @@ class ItemState(Enum):
 
 
 class User:
-    @staticmethod
+    
     def _validation_decorator(method):
         def validate(*args):
             if args[0].verified:
@@ -87,7 +87,7 @@ class User:
         return ret
 
     @_validation_decorator
-    def notification(self,descr):
+    def notification(self,descr="user.notification"):
         print("Notification to {} with descr:{}".format(self.namesurname,descr))
 
     @staticmethod
