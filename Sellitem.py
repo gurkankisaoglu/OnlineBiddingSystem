@@ -1,6 +1,8 @@
 import time
 import datetime
 import utilities
+from User import User
+from utilities import NotificationModule
 
 class SellItem:
     """
@@ -17,7 +19,6 @@ class SellItem:
         self.bidtype = bidtype
         self.minbid = minbid
         self.image = image
-
         self.auction_started = False
         self.bid_records = []
         self.creation_time = time.time()
@@ -25,7 +26,13 @@ class SellItem:
         self.current_bidder = None
         self.auction_start_timestamp = None
         self.auction_end_timestamp = None
+
+        self.obs = NotificationModule()
         
+        self.obs.notify(self.itemtype, "Object Created")
+        # {"itemtype": [callback1,calback2,..]}
+        self.callbacks = {}
+
         self.stopbid = None
 
     def startauction(self, stopbid = None):
@@ -36,15 +43,14 @@ class SellItem:
 
         self.auction_started = True
         self.auction_start_timestamp = time.time()
+        self.notify_user()
+        self.obs.notify(self.itemtype,"Auction Started!")
     
     def bid(self, user, amount):
-<<<<<<< HEAD
         if not self.auction_started:
             raise Exception("Auction is not started")
         if(amount < self.minbid):
             raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
-=======
->>>>>>> 36d0a0bc228a59106e74482bbd3cbe627904c078
         if(amount < self.current_value):
             raise Exception(" Bid amount is lower than current value({}).".format(self.current_value))
         if(amount-self.current_value < self.minbid):
@@ -64,11 +70,14 @@ class SellItem:
                 
         else:
             raise Exception(" User does not have this much unreserved amount.")
+
+        self.notify_user()
             
     def sell(self):
         if self.auction_started:
             # OWNER SHOULD BE CHECKED, only owner can call sell()
             self.auction_started = False
+            self.notify_user()
             if self.current_value != 0 and self.current_bidder:
                 self.current_bidder.checkout(self.current_value,self, self.owner)
                 self.owner = self.current_bidder
@@ -85,7 +94,7 @@ class SellItem:
         }
 
     def watch(self, user, watchmethod):
-        watchmethod(user)
+        self.callbacks[user] = watchmethod
 
     def history(self):
         return {
@@ -93,3 +102,7 @@ class SellItem:
             "auction_start": utilities.dateformatter(self.auction_start_timestamp),
             "bids": self.bid_records
         }
+
+    def notify_user(self):
+        for user in self.callbacks:
+            self.callbacks[user]("Item state changed")

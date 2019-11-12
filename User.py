@@ -3,6 +3,8 @@ import string
 from enum import Enum
 import secrets
 import json
+from Sellitem import SellItem
+from utilities import NotificationModule
 
 class ItemState(Enum):
     all = 1
@@ -10,7 +12,10 @@ class ItemState(Enum):
     active = 2
     sold = 3
 
+
+
 class User:
+    @staticmethod
     def _validation_decorator(method):
         def validate(*args):
             if args[0].verified:
@@ -23,6 +28,8 @@ class User:
                         raise Exception("Not verified")
                 return method(*args)
         return validate
+    
+    obs = NotificationModule()
 
     def __init__(self, email, namesurname, password):
         self.email = email
@@ -34,6 +41,8 @@ class User:
         self.income = 0
         self.verification_number = secrets.token_urlsafe(32)
         self.items = []
+
+
         print(self.verification_number)
         self.verified = False
         data = None
@@ -77,11 +86,14 @@ class User:
                 ret.append(item)
         return ret
 
+    @_validation_decorator
+    def notification(self,descr):
+        print("Notification to {} with descr:{}".format(self.namesurname,descr))
+
     @staticmethod
     def watch(itemtype, watchmethod):
-
-        pass
-
+        User.obs.register(itemtype,watchmethod)
+    
     @_validation_decorator
     def addBalance(self, amount):
         self.balance += amount
