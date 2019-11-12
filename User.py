@@ -15,7 +15,7 @@ class ItemState(Enum):
 
 
 class User:
-    
+
     def _validation_decorator(method):
         def validate(*args):
             if args[0].verified:
@@ -45,9 +45,12 @@ class User:
 
         print(self.verification_number)
         self.verified = False
-        data = None
-        with open("verification.json", "r") as f:
-            data = json.load(f)
+        data = {}
+        try:
+            with open("verification.json", "r") as f:
+                data = json.load(f)
+        except:
+            pass
         with open("verification.json", "w") as f:
             data[self.email] = {"number": self.verification_number, "status": False}
             json.dump(data,f)
