@@ -29,9 +29,10 @@ class SellItem:
         self.current_bidder = None
         self.auction_start_timestamp = None
         self.auction_end_timestamp = None
-
         self.obs = NotificationModule()
         
+        self.bid_operator = 1 if self.bidtype == "increment" else -1
+
         self.obs.notify(self.itemtype, "Object Created")
         # {"itemtype": [callback1,calback2,..]}
         self.callbacks = {}
@@ -50,14 +51,16 @@ class SellItem:
         self.obs.notify(self.itemtype,"Auction Started!")
     
     def bid(self, user, amount):
-        with self.lock :
+        with self.lock:
             if not self.auction_started:
                 raise Exception("Auction is not started")
-            if(amount < self.minbid):
+            if amount == 0:
+                raise Exception("Bid cannot be zero!")
+            if(self.bidtype=="increment" and amount <  self.minbid):
                 raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
-            if(amount < self.current_value):
+            if(self.bid_operator * amount < self.bid_operator * self.current_value):
                 raise Exception(" Bid amount is lower than current value({}).".format(self.current_value))
-            if(amount-self.current_value < self.minbid):
+            if(self.bid_operator * (amount-self.current_value) < self.bid_operator * self.minbid):
                 raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
             if(user.reserve_amount(amount)):
                 if self.current_bidder:
