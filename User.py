@@ -25,7 +25,7 @@ class User:
                 with open("verification.json", "r") as f:
                     data = json.load(f)
                     args[0].verified = data[args[0].email]["status"]
-                    if 0 and not args[0].verified:
+                    if not args[0].verified:
                         raise Exception("Not verified")
                 return method(*args)
         return validate
