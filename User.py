@@ -34,8 +34,10 @@ class User:
 
     def __init__(self, email, namesurname, password):
         if not re.search("(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" , email):
-            raise Exception("Email is not valid")
+            raise ValueError("Email is not valid")
         self.email = email
+        if not re.search("[A-Za-z]{2,25}\s[A-Za-z]{2,25}$", namesurname):
+            raise ValueError("Namesurname is invalid")
         self.namesurname = namesurname
         self.password = password
         self.balance = 0

@@ -1,17 +1,17 @@
 from User import User
 from Sellitem import SellItem
 
-owner = User("user@email.com", "asd", "pass")
-#token = input("enter token\n")
-#User.verify("user@email.com", token)
+owner = User("user@email.com", "asd asd", "pass")
+token = input("enter token\n")
+User.verify("user@email.com", token)
 
-buyer = User("buyer@email.com", "asd", "ppp")
-#token = input("enter token\n")
-#User.verify("buyer@email.com", token)
+buyer = User("buyer@email.com", "asd surname", "ppp")
+token = input("enter token\n")
+User.verify("buyer@email.com", token)
 
-buyer2 = User("buyer2@email.com", "asd2", "ppp2")
-#token = input("enter token\n")
-#User.verify("buyer2@email.com", token)
+buyer2 = User("buyer2@email.com", "asd kfkkf", "ppp2")
+token = input("enter token\n")
+User.verify("buyer2@email.com", token)
 
 User.watch("typ",buyer.notification)
 
