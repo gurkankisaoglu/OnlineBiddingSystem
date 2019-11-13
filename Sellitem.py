@@ -1,6 +1,8 @@
 import time
 import datetime
 import utilities
+import threading as th
+
 from utilities import NotificationModule
 
 class SellItem:
@@ -10,6 +12,8 @@ class SellItem:
     def __init__(self, owner, title, itemtype, description, bidtype, 
                 starting, minbid = 1.0, image = None ):
         
+        self.lock = th.Lock()
+
         self.owner = owner
         self.owner.add_item(self)
         self.title = title
@@ -46,40 +50,42 @@ class SellItem:
         self.obs.notify(self.itemtype,"Auction Started!")
     
     def bid(self, user, amount):
-        if not self.auction_started:
-            raise Exception("Auction is not started")
-        if(amount < self.minbid):
-            raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
-        if(amount < self.current_value):
-            raise Exception(" Bid amount is lower than current value({}).".format(self.current_value))
-        if(amount-self.current_value < self.minbid):
-            raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
-        if(user.reserve_amount(amount)):
-            if self.current_bidder:
-                self.current_bidder.release_amount(self.current_value)
-            self.current_value = amount
-            self.current_bidder = user
-            self.bid_records.append({"bidder": user, "amount": amount,"timestamp": time.time()})
+        with self.lock :
+            if not self.auction_started:
+                raise Exception("Auction is not started")
+            if(amount < self.minbid):
+                raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
+            if(amount < self.current_value):
+                raise Exception(" Bid amount is lower than current value({}).".format(self.current_value))
+            if(amount-self.current_value < self.minbid):
+                raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
+            if(user.reserve_amount(amount)):
+                if self.current_bidder:
+                    self.current_bidder.release_amount(self.current_value)
+                self.current_value = amount
+                self.current_bidder = user
+                self.bid_records.append({"bidder": user, "amount": amount,"timestamp": time.time()})
 
-            if self.stopbid and  amount >= self.stopbid:
-                print("Satiyorum... Sattim!")
-                self.auction_started = False
-                self.current_bidder.checkout(amount,self,self.owner)
-                self.owner = self.current_bidder
-                
-        else:
-            raise Exception(" User does not have this much unreserved amount.")
+                if self.stopbid and  amount >= self.stopbid:
+                    print("Satiyorum... Sattim!")
+                    self.auction_started = False
+                    self.current_bidder.checkout(amount,self,self.owner)
+                    self.owner = self.current_bidder
+                    
+            else:
+                raise Exception(" User does not have this much unreserved amount.")
 
-        self.notify_user()
+            self.notify_user()
             
     def sell(self):
-        if self.auction_started:
-            # OWNER SHOULD BE CHECKED, only owner can call sell()
-            self.auction_started = False
-            self.notify_user()
-            if self.current_value != 0 and self.current_bidder:
-                self.current_bidder.checkout(self.current_value,self, self.owner)
-                self.owner = self.current_bidder
+        with self.lock :
+            if self.auction_started:
+                # OWNER SHOULD BE CHECKED, only owner can call sell()
+                self.auction_started = False
+                self.notify_user()
+                if self.current_value != 0 and self.current_bidder:
+                    self.current_bidder.checkout(self.current_value,self, self.owner)
+                    self.owner = self.current_bidder
         
     def view(self):
         return {
@@ -93,7 +99,10 @@ class SellItem:
         }
 
     def watch(self, user, watchmethod):
-        self.callbacks[user] = watchmethod
+        with self.lock :
+            if user in self.callbacks:
+                raise Exception("User is already add watch_list")
+            self.callbacks[user] = watchmethod
 
     def history(self):
         return {
