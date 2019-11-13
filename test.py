@@ -1,9 +1,11 @@
 from User import User
 from Sellitem import SellItem
 
-owner = User("user@email.com", "asd asd", "pass")
+owner = User("user@email.com", "asd asd", "pas34f.w")
 token = input("enter token\n")
 User.verify("user@email.com", token)
+
+owner.listitems(owner,"qwe","sad")
 
 buyer = User("buyer@email.com", "asd surname", "ppp")
 token = input("enter token\n")

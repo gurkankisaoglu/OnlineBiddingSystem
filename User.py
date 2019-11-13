@@ -39,6 +39,8 @@ class User:
         if not re.search("[A-Za-z]{2,25}\s[A-Za-z]{2,25}$", namesurname):
             raise ValueError("Namesurname is invalid")
         self.namesurname = namesurname
+        if not re.search("^[a-zA-Z0-9_.+-]{8,16}$", password):
+            raise ValueError("Password is invalid")
         self.password = password
         self.balance = 0
         self.reserved_balance = 0
@@ -76,6 +78,8 @@ class User:
 
     @_validation_decorator
     def changepassword(self, newpassword, oldpassword=None):
+        if not re.search("^[a-zA-Z0-9_.+-]{8,16}$", newpassword):
+            raise ValueError("Password is invalid")
         if oldpassword is None:
             self.password = "".join([random.choice(string.ascii_letters) for i in range(15)])
             print("temp password is {}".format(self.password))
@@ -88,6 +92,8 @@ class User:
 
     @_validation_decorator
     def listitems(self, user, itemtype = None, state='all'):
+        if not type(user) is User:
+            raise ValueError("invalid user")
         ret = []
         for item in user.items:
             if item["itemtype"] == itemtype and item["state"] == state:
@@ -104,6 +110,8 @@ class User:
     
     @_validation_decorator
     def addBalance(self, amount):
+        if not (type(amount) is float or type(amount) is int):
+            raise ValueError("amount is invalid")
         self.balance += amount
 
         if amount > 0:
@@ -130,6 +138,8 @@ class User:
 
     @_validation_decorator
     def release_amount(self, amount):
+        if not (type(amount) is float or type(amount) is int):
+            raise ValueError("amount is invalid")
         self.reserved_balance -= amount
 
     @_validation_decorator

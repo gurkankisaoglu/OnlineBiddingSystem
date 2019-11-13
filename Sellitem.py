@@ -2,6 +2,7 @@ import time
 import datetime
 import utilities
 import threading as th
+from User import User
 
 from utilities import NotificationModule
 
@@ -40,6 +41,8 @@ class SellItem:
         self.stopbid = None
 
     def startauction(self, stopbid = None):
+        if not (type(stopbid) is float or type(stopbid) is int):
+            raise ValueError("amount is invalid")
         if self.auction_started:
             raise Exception("Auction is already started at {}".format(utilities.dateformatter(self.auction_start_timestamp)))
         if stopbid:
@@ -51,6 +54,10 @@ class SellItem:
         self.obs.notify(self.itemtype,"Auction Started!")
     
     def bid(self, user, amount):
+        if not (type(amount) is float or type(amount) is int):
+            raise ValueError("amount is invalid")
+        if not type(user) is User:
+            raise ValueError("invalid user")
         with self.lock:
             if not self.auction_started:
                 raise Exception("Auction is not started")
@@ -102,6 +109,8 @@ class SellItem:
         }
 
     def watch(self, user, watchmethod):
+        if not type(user) is User:
+            raise ValueError("invalid user")
         with self.lock :
             if user in self.callbacks:
                 raise Exception("User is already add watch_list")
