@@ -69,7 +69,7 @@ class SellItem:
                 self.current_bidder = user
                 self.bid_records.append({"bidder": user, "amount": amount,"timestamp": time.time()})
 
-                if self.stopbid and  amount >= self.stopbid:
+                if self.stopbid and  self.bid_operator * amount >= self_bid_operator * self.stopbid:
                     print("Satiyorum... Sattim!")
                     self.auction_started = False
                     self.current_bidder.checkout(amount,self,self.owner)
