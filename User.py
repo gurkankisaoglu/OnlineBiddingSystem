@@ -5,6 +5,7 @@ import secrets
 import json
 from Sellitem import SellItem
 from utilities import NotificationModule
+import re
 
 class ItemState(Enum):
     all = 1
@@ -24,7 +25,7 @@ class User:
                 with open("verification.json", "r") as f:
                     data = json.load(f)
                     args[0].verified = data[args[0].email]["status"]
-                    if not args[0].verified:
+                    if 0 and not args[0].verified:
                         raise Exception("Not verified")
                 return method(*args)
         return validate
@@ -32,6 +33,8 @@ class User:
     obs = NotificationModule()
 
     def __init__(self, email, namesurname, password):
+        if not re.search("(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" , email):
+            raise Exception("Email is not valid")
         self.email = email
         self.namesurname = namesurname
         self.password = password

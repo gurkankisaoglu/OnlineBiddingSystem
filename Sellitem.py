@@ -54,8 +54,8 @@ class SellItem:
         with self.lock:
             if not self.auction_started:
                 raise Exception("Auction is not started")
-            if amount == 0:
-                raise Exception("Bid cannot be zero!")
+            if amount <= 0:
+                raise Exception("Bid cannot be <= zero!")
             if(self.bidtype=="increment" and amount <  self.minbid):
                 raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
             if(self.bid_operator * amount < self.bid_operator * self.current_value):
@@ -69,7 +69,7 @@ class SellItem:
                 self.current_bidder = user
                 self.bid_records.append({"bidder": user, "amount": amount,"timestamp": time.time()})
 
-                if self.stopbid and  self.bid_operator * amount >= self_bid_operator * self.stopbid:
+                if self.stopbid and  self.bid_operator * amount >= self.bid_operator * self.stopbid:
                     print("Satiyorum... Sattim!")
                     self.auction_started = False
                     self.current_bidder.checkout(amount,self,self.owner)
