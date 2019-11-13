@@ -62,13 +62,13 @@ class SellItem:
             if not self.auction_started:
                 raise Exception("Auction is not started")
             if amount <= 0:
-                raise Exception("Bid cannot be <= zero!")
+                raise ValueError("Bid cannot be <= zero!")
             if(self.bidtype=="increment" and amount <  self.minbid):
-                raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
+                raise ValueError(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
             if(self.bid_operator * amount < self.bid_operator * self.current_value):
-                raise Exception(" Bid amount is lower than current value({}).".format(self.current_value))
+                raise ValueError(" Bid amount is lower than current value({}).".format(self.current_value))
             if(self.bid_operator * (amount-self.current_value) < self.bid_operator * self.minbid):
-                raise Exception(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
+                raise ValueError(" Bid amount is lower than minimum bid amount({})".format(self.minbid))
             if(user.reserve_amount(amount)):
                 if self.current_bidder:
                     self.current_bidder.release_amount(self.current_value)
