@@ -3,7 +3,6 @@ import datetime
 import utilities
 import threading as th
 from User import User
-
 from utilities import NotificationModule
 
 class SellItem:
@@ -29,7 +28,6 @@ class SellItem:
         self.current_value = starting
         self.current_bidder = None
         self.auction_start_timestamp = None
-        self.auction_end_timestamp = None
         self.obs = NotificationModule()
         
         self.bid_operator = 1 if self.bidtype == "increment" else -1
@@ -79,9 +77,9 @@ class SellItem:
                 if self.stopbid and  self.bid_operator * amount >= self.bid_operator * self.stopbid:
                     print("Satiyorum... Sattim!")
                     self.auction_started = False
+                    self.auction_start_timestamp = None
                     self.current_bidder.checkout(amount,self,self.owner)
-                    self.owner = self.current_bidder
-                    
+                    self.owner = self.current_bidder                    
             else:
                 raise Exception(" User does not have this much unreserved amount.")
 
@@ -101,7 +99,7 @@ class SellItem:
         return {
             "title": self.title,
             "description": self.description,
-            "auction_start": utilities.dateformatter(self.auction_start_timestamp),
+            "auction_start": utilities.dateformatter(self.auction_start_timestamp ) or "Auction is not started yet",
             "bids": self.bid_records,
             "current_value": self.current_value,
             "current_bidder": self.current_bidder,
@@ -109,7 +107,7 @@ class SellItem:
         }
 
     def watch(self, user, watchmethod):
-        if not type(user) is User:
+        if not isinstance(user,User):
             raise ValueError("invalid user")
         with self.lock :
             if user in self.callbacks:
@@ -117,10 +115,13 @@ class SellItem:
             self.callbacks[user] = watchmethod
 
     def history(self):
+        if not self.auction_started:
+            return("Auction is not started yet!")
         return {
             "creation":  utilities.dateformatter(self.creation_time),
             "auction_start": utilities.dateformatter(self.auction_start_timestamp),
-            "bids": self.bid_records
+            "bids": self.bid_records,
+            "current_value": self.current_value
         }
 
     def notify_user(self,descr=""):

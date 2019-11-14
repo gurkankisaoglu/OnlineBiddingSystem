@@ -3,7 +3,6 @@ import string
 from enum import Enum
 import secrets
 import json
-from Sellitem import SellItem
 from utilities import NotificationModule
 import re
 
@@ -92,7 +91,7 @@ class User:
 
     @_validation_decorator
     def listitems(self, user, itemtype = None, state='all'):
-        if not type(user) is User:
+        if not isinstance(user,User):
             raise ValueError("invalid user")
         ret = []
         for item in user.items:
