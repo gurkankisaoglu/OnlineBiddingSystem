@@ -30,9 +30,8 @@ print("Buyer1 tries to bid 1000!\
  It should deny since auction is not started")
 try:
     item.bid(buyer1, 1000)
-except Exception as e:
-    print("Failed with message: ",e)
-finally:
     print("Bid success!")
     print("item view: ", item.view())
+except Exception as e:
+    print("Failed with message: ",e)
 
