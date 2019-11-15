@@ -6,13 +6,6 @@ import json
 from utilities import NotificationModule
 import re
 
-class ItemState(Enum):
-    all = 1
-    onhold = 1
-    active = 2
-    sold = 3
-
-
 
 class User:
 
@@ -93,9 +86,11 @@ class User:
     def listitems(self, user, itemtype = None, state='all'):
         if not isinstance(user,User):
             raise ValueError("invalid user")
+        if user.items == []:
+            print("There is no item in itemlist of {}".format(user.namesurname))
         ret = []
         for item in user.items:
-            if item["itemtype"] == itemtype and item["state"] == state:
+            if item.itemtype == itemtype and (item.state == state or state == 'all'):
                 ret.append(item)
         return ret
 
@@ -118,10 +113,12 @@ class User:
 
     @_validation_decorator
     def report(self):
-        items_sold = [i for i in self.items if self.items['state'] == ItemState.sold]
-        items_onsale = [i for i in self.items if self.items['state'] == ItemState.active]
+        items_sold = [i for i in self.items if i.state == "sold"]
+        items_onsale = [i for i in self.items if i.state == "active"]
         
         return {
+            "name": self.namesurname,
+            "email": self.email,
             "items_sold": items_sold,
             "on_sale": items_onsale,
             "all_expenses": self.expenses,

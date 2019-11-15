@@ -22,6 +22,7 @@ class SellItem:
         self.bidtype = bidtype
         self.minbid = minbid
         self.image = image
+        self.state = "onhold"
         self.auction_started = False
         self.bid_records = []
         self.creation_time = time.time()
@@ -45,7 +46,7 @@ class SellItem:
             raise Exception("Auction is already started at {}".format(utilities.dateformatter(self.auction_start_timestamp)))
         if stopbid:
             self.stopbid = stopbid
-
+        self.state = "active"
         self.auction_started = True
         self.auction_start_timestamp = time.time()
         self.notify_user()
@@ -90,6 +91,7 @@ class SellItem:
             if self.auction_started:
                 # OWNER SHOULD BE CHECKED, only owner can call sell()
                 self.auction_started = False
+                self.state = "sold"
                 self.notify_user()
                 if self.current_value != 0 and self.current_bidder:
                     self.current_bidder.checkout(self.current_value,self, self.owner)
