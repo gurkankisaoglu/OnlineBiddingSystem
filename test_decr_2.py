@@ -41,3 +41,4 @@ except Exception as e:
 print("\nsee item view and history: \n")
 print("item_view: ", item.view())
 print("\nitem_history:", item.history())
+print("\n\n Test Finished")
