@@ -76,6 +76,7 @@ except Exception as e:
 print("\n\nItem sold see Item view and history, Buyer1 and Buyer2 Report\n\n")
 print("item_view: ", item.view())
 print("\nitem_history:", item.history())
+print("\nitem_owner_report: ",item_owner.report())
 print("\nbuyer1_report: ",buyer1.report())
 print("\nbuyer2_report: ",buyer1.report())
 print("\n\n\n Test Finished!")
