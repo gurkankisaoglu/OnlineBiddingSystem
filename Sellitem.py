@@ -88,7 +88,7 @@ class SellItem:
             if self.auction_type[0]=="increment":
                 if amount < self.current_value + self.auction_type[1]:
                     raise ValueError(" Bid amount is lower than current value+delta(current:{},delta:{})."\
-                        .format(self.current_value),self.auction_type[1])
+                        .format(self.current_value,self.auction_type[1]))
                 if(user.reserve_amount(amount)):
                     if self.current_bidder:
                         self.current_bidder.release_amount(self.current_value)

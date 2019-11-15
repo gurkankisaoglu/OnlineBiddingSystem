@@ -24,7 +24,7 @@ class User:
     
     obs = NotificationModule()
 
-    def __init__(self, email, namesurname, password):
+    def __init__(self, email, namesurname, password, balance=0):
         if not re.search("(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" , email):
             raise ValueError("Email is not valid")
         self.email = email
@@ -34,12 +34,13 @@ class User:
         if not re.search("^[a-zA-Z0-9_.+-]{8,16}$", password):
             raise ValueError("Password is invalid")
         self.password = password
-        self.balance = 0
+        self.balance = balance
         self.reserved_balance = 0
         self.expenses = 0
         self.income = 0
         self.verification_number = secrets.token_urlsafe(32)
         self.items = []
+        self.bought_items = []
 
 
         print(self.verification_number)
@@ -121,8 +122,10 @@ class User:
             "email": self.email,
             "items_sold": items_sold,
             "on_sale": items_onsale,
+            "bought": self.bought_items,
             "all_expenses": self.expenses,
-            "income": self.income
+            "income": self.income,
+            "balance": self.balance
         }
 
     @_validation_decorator
@@ -143,8 +146,10 @@ class User:
         self.reserved_balance -= amount
         self.balance -= amount
         owner.addBalance(amount)
-        owner.release_item(item)
-        self.add_item(item)
+        #owner.release_item(item)
+        #self.add_item(item)
+        self.bought_items.append(item)
+        self.expenses += amount
 
     @_validation_decorator
     def release_item(self, item):
