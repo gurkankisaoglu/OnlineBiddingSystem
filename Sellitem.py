@@ -67,7 +67,7 @@ class SellItem:
         self.state = "active"
         self.auction_started = True
         self.auction_start_timestamp = time.time()
-        self.notify_user()
+        self.notify_user("Auction is started!")
         self.obs.notify(self.itemtype,"Auction Started!")
         if self.auction_type[0]== "decrement":
             self.scheduler.resume()

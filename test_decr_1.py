@@ -42,7 +42,6 @@ print("\nItem view: ", item.view())
 
 print("\nbuyer1 and buyer2 watches to item with item.watch()")
 item.watch(buyer1, buyer1.notification)
-item.watch(buyer2, buyer2.notification)
 
 print("\nBuyer1 tries to bid 1000!\
  It should deny since auction is not started")
