@@ -2,6 +2,14 @@ from User import User
 from Sellitem import SellItem
 
 item_owner = User("owner_mail@mail.com", "name surname", "password123")
+
+print("Trying to changepassword without verify it should raise Not verified exception")
+try:
+    item_owner.changepassword("12121212","adasdas")
+except Exception as e:
+    print(e)
+print("Now verify user")
+
 token = input("enter token: ")
 User.verify("owner_mail@mail.com",token)
 
@@ -18,8 +26,7 @@ buyer2.addBalance(7 * 1000)
 
 print("Adding item to item_owner")
 item = SellItem(item_owner, "Tofas Sahin", "Car", "Doktordan az kullanilmis.", "increment",6880,500)
-#TODO: list items wrong!!!
-#print("User item list: ", item_owner.listitems(item_owner))
+print("User item list: ", item_owner.listitems(item_owner))
 print("Item view: ", item.view())
 
 print("buyer1 and buyer2 watches to item with item.watch()")
