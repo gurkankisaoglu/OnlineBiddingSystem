@@ -3,6 +3,7 @@ Utility function definitions goes here.
 """
 
 import datetime
+from threading import Lock
 
 def dateformatter(timestamp):
     """
@@ -30,15 +31,17 @@ def Singleton(cls):
 class NotificationModule:
     def __init__(self):
         self.callbacks = {}
-
+        self.lock = Lock()
     def register(self,itemtype,watchmethod):
-        if itemtype not in self.callbacks:
-            self.callbacks[itemtype] = []
-        self.callbacks[itemtype].append(watchmethod)
+        with self.lock:
+            if itemtype not in self.callbacks:
+                self.callbacks[itemtype] = []
+            self.callbacks[itemtype].append(watchmethod)
     
     def notify(self,itemtype,descr):
         # if itemtype is not in the dict it gives key error
-        if not itemtype in self.callbacks:
-            return
-        for method in self.callbacks[itemtype]:
-            method(descr)
+        with self.lock:
+            if not itemtype in self.callbacks:
+                return
+            for method in self.callbacks[itemtype]:
+                method(descr)
