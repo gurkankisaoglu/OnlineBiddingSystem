@@ -26,7 +26,7 @@ buyer2.addBalance(7 * 1000)
 
 print("Adding item to item_owner")
 item = SellItem(item_owner, "Tofas Sahin", "Car", "Doktordan az kullanilmis.", "increment",6880,500)
-print("User item list: ", item_owner.listitems(item_owner))
+print("User item list: ", item_owner.listitems(item_owner,"Car"))
 print("Item view: ", item.view())
 
 print("buyer1 and buyer2 watches to item with item.watch()")
