@@ -90,7 +90,7 @@ class User:
             print("There is no item in itemlist of {}".format(user.namesurname))
         ret = []
         for item in user.items:
-            if item.itemtype == itemtype and (item.state == state or state == 'all'):
+            if (item.itemtype == itemtype or itemtype == None) and (item.state == state or state == 'all'):
                 ret.append(item)
         return ret
 
