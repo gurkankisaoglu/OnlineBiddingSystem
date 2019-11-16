@@ -16,7 +16,7 @@ User.verify(buyer1.email,buyer1.verification_number)
 buyer1.addBalance(10 * 1000)
 
 item = SellItem(item_owner, "Tofas Sahin", "Car", "Doktordan az kullanilmis.",\
-    ("decrement",1,50,5000),6000,1)
+    ("decrement",1,500,5000),6000,1)
 print("\nAdding item to item_owner, with auction type={} starting={}".format(item.auction_type,item.current_value))
 
 print("\nbuyer1 watches to item with item.watch()")
@@ -24,7 +24,7 @@ item.watch(buyer1, buyer1.notification)
 
 print("\nAuction started and we will wait 2 min to see price drop and stop auto.")
 item.startauction(owner=item_owner)
-time.sleep(61)
+time.sleep(121)
 
 print("\n\nAuction stoped \n\n")
 
