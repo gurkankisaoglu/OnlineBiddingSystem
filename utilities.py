@@ -36,6 +36,8 @@ class NotificationModule:
         with self.lock:
             if itemtype not in self.callbacks:
                 self.callbacks[itemtype] = []
+            if watchmethod in self.callbacks[itemtype]:
+                raise Exception("This method already added to callbacks!")
             self.callbacks[itemtype].append(watchmethod)
     
     def notify(self,itemtype,descr):
