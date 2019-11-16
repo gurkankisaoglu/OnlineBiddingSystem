@@ -142,14 +142,25 @@ class User:
         self.reserved_balance -= amount
 
     @_validation_decorator
-    def checkout(self, amount, item, owner):
-        self.reserved_balance -= amount
-        self.balance -= amount
-        owner.addBalance(amount)
-        #owner.release_item(item)
-        #self.add_item(item)
-        self.bought_items.append(item)
-        self.expenses += amount
+    def checkout(self, amount, item, owner, overall_bids = None):
+        if not overall_bids is None:
+            ''' type instant increment checkout from all '''
+            for user in overall_bids:
+                user.reserved_balance -= overall_bids[user]
+                user.balance -= overall_bids[user]
+                user.expenses += overall_bids[user]
+                owner.addBalance(overall_bids[user])
+
+            self.bought_items.append(item)
+
+        else:
+            self.reserved_balance -= amount
+            self.balance -= amount
+            owner.addBalance(amount)
+            #owner.release_item(item)
+            #self.add_item(item)
+            self.bought_items.append(item)
+            self.expenses += amount
 
     @_validation_decorator
     def release_item(self, item):

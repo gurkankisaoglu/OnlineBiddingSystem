@@ -40,11 +40,15 @@ class SellItem:
         self.callbacks = {}
         #self.stopbid = None
 
-        if auction_type[0]== "decrement":
+        if auction_type[0] == "decrement":
             self.scheduler = BackgroundScheduler()
             self.decrement_job = self.scheduler.add_job(
                 self.__decrement_periodic,'interval', minutes = self.auction_type[1])
             self.scheduler.start(paused=True)
+        
+        elif auction_type[0] == "instantincrement":
+            self.overall_bids = {}
+
     def __decrement_periodic(self):
         with self.lock:
             self.current_value -= self.auction_type[2]
@@ -104,7 +108,7 @@ class SellItem:
                         self.owner = self.current_bidder
                         self.state = "sold"
                 else:
-                    raise Exception(" User does not have this much unreserved amount.")
+                    raise Exception("User does not have this much unreserved amount.")
             elif self.auction_type[0]=="decrement":
                 if amount < self.current_value:
                     raise Exception("Auction type decrement. Value is lower than current({})".format(self.current_value))
@@ -119,10 +123,31 @@ class SellItem:
                     self.scheduler.pause()
                     self.state = "sold"
                 else:
-                    raise Exception(" User does not have this much unreserved amount.") 
-
+                    raise Exception("User does not have this much unreserved amount.") 
             else:
-                print("INSTANT INCREMENT IS NOT IMPLEMENTED!")
+                if(amount < self.auction_type[1]):
+                    raise Exception("Bid amount is lower than minbid({})".format(self.auction_type[1]))
+                if(user.reserve_amount(amount)):
+                    self.current_value += amount
+                    self.bid_records.append({"bidder": user, "amount": amount,"timestamp": time.time()})
+                    if not user in self.overall_bids:
+                        self.overall_bids[user] = amount
+                    else:
+                        self.overall_bids[user] += amount
+                    max_user = user
+                    for u in self.overall_bids:
+                        if self.overall_bids[u] > self.overall_bids[max_user]:
+                            max_user = u
+                    if self.current_value >= self.auction_type[2]:
+                        print("Satiyorum... Sattim!")
+                        self.auction_started = False
+                        self.auction_end_timestamp = time.time()
+                        max_user.checkout(0,self,self.owner, self.overall_bids)
+                        self.owner = max_user
+                        self.state = "sold"
+                    
+                else:
+                    raise Exception("User does not have this much unreserved amount.!")
                 
             self.notify_user()
             
@@ -133,12 +158,37 @@ class SellItem:
             if not self.auction_started:
                 raise Exception("Auction is not started yet!")
             # OWNER SHOULD BE CHECKED, only owner can call sell()
+            if self.auction_type[0]=="decrement":
+                self.state = "onhold"
+                self.notify_user("Item Auction Stopped")
+                return
+            
+            if self.auction_type[0]=="instantincrement":
+                if self.overall_bids:
+                    self.state = "sold"
+                    self.auction_started = False
+                    self.auction_end_timestamp = time.time()
+                    max_user = None
+                    for u in self.overall_bids:
+                        if not max_user:
+                            max_user = u 
+                        elif self.overall_bids[u] > self.overall_bids[max_user]:
+                            max_user = u
+                    
+                    max_user.checkout(0,self,self.owner, self.overall_bids)
+                    self.owner = max_user
+                    return 
+                else:
+                    self.state = "onhold"
+
+        
             self.auction_started = False
-            self.state = "sold"
+            self.state = "onhold"
             self.notify_user()
             if self.current_value != 0 and self.current_bidder:
                 self.current_bidder.checkout(self.current_value,self, self.owner)
                 self.owner = self.current_bidder
+                self.state = "sold"
         
     def view(self):
         return {
