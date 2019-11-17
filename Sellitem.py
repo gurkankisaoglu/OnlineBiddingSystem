@@ -77,6 +77,8 @@ class SellItem:
             self.scheduler.resume()
     
     def bid(self, user, amount):
+        if user == self.owner:
+            raise Exception("Owner cannot bid!")
         with self.lock:
             if not (type(amount) is float or type(amount) is int):
                 raise ValueError("amount is invalid")
