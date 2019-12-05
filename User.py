@@ -8,7 +8,9 @@ import re
 
 
 class User:
-
+    """
+     User class docs
+    """
     def _validation_decorator(method):
         def validate(*args):
             if args[0].verified:
@@ -54,7 +56,6 @@ class User:
         with open("verification.json", "w") as f:
             data[self.email] = {"number": self.verification_number, "status": False}
             json.dump(data,f)
-        f.close()
 
     @staticmethod
     def verify(email, verification_number):
@@ -131,7 +132,7 @@ class User:
     @_validation_decorator
     def sell_item(self, item):
         if item in self.items:
-            item.sell()
+            item.sell(self)
         else:
             raise Exception("Cannot be sold")
 
