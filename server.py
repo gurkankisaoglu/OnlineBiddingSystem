@@ -3,7 +3,7 @@ import json
 import pickle
 from User import User
 from Sellitem import SellItem
-
+from socket import *
 
 class Agent(Thread):
     def __init__(self, ns, data_mutex, users):
@@ -18,10 +18,10 @@ class Agent(Thread):
     def register(self, req):
         with self.lock:
             self.current_user = User(req.email, req.namesurname, req.password, req.balance)
-            self.send_message(self.sock, "User created.")
+            self.send_message("User created.")
     
     def close(self):
-        self.send_message(self.sock, "Selametle yine bekleriz.")
+        self.send_message("Selametle yine bekleriz.")
         self.sock.close()
 
     def login(self, req):
@@ -30,7 +30,7 @@ class Agent(Thread):
                 self.current_user = self.users[req["email"]]
             except:
                 self.send_message("User cannot be found.")
-            if self.current_user.password != req["password"]
+            if self.current_user.password != req["password"]:
                 self.send_message("Password is incorrect.")
             else:
                 self.send_message("Successfully login.")
@@ -65,7 +65,7 @@ class Agent(Thread):
 
     def run(self):
         while True:
-            req = pickle.load(sock.recv(1000))
+            req = pickle.load(self.sock.recv(1000))
 
             if req["type"] == "register":
                 self.register(req)
