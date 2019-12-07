@@ -74,4 +74,7 @@ class NotificationModule:
             if not itemtype in self.callbacks:
                 return
             for method in self.callbacks[itemtype]:
-                method(descr)
+                try:
+                    method(descr)
+                except:
+                    pass

@@ -222,4 +222,7 @@ class SellItem:
 
     def notify_user(self,descr="Item state is changed"):
         for user in self.callbacks:
-            self.callbacks[user](descr)
+            try:
+                self.callbacks[user](descr)
+            except:
+                pass

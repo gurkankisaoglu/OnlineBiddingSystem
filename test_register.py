@@ -5,6 +5,8 @@ import threading
 import json
 import time
 
+_time = 0.05
+
 socket_lock = threading.Lock()
 lock = threading.Lock()
 
@@ -17,6 +19,7 @@ sock = utilities.connect(lock)
 
 """
 
+time.sleep(_time)
 sock.send(pickle.dumps({"type":"register",
                         "email": "new@mail.com",
                         "namesurname":"ad soyad", 
@@ -29,10 +32,11 @@ sock.send(pickle.dumps({"type":"register",
     VERIFY
 
 """
-time.sleep(0.1)
+time.sleep(_time)
 sock.send(pickle.dumps({"type":"user", "operation": "verify", 
                         "verification_number": utilities.verf("new@mail.com")}))
 
+time.sleep(_time)
 sock.send(pickle.dumps({"type":"close"}))
 
 sock.close()
@@ -45,19 +49,21 @@ sock = utilities.connect(lock)
 
 """
 
+time.sleep(_time)
 sock.send(pickle.dumps({"type":"login",
                         "email": "new@mail.com",
                         "password": "aaasssddd"}))
 
 sock2 = utilities.connect(lock)
 
+time.sleep(_time)
 sock2.send(pickle.dumps({"type":"register",
                         "email": "user@mail.com",
                         "namesurname":"user name", 
                         "password": "qweasdzxc", 
                         "balance": 10000}))
 
-time.sleep(0.1)
+time.sleep(_time)
 sock2.send(pickle.dumps({"type":"user", "operation": "verify", 
                         "verification_number": utilities.verf("user@mail.com")}))
 
@@ -69,6 +75,7 @@ sock2.send(pickle.dumps({"type":"user", "operation": "verify",
 
 print("create item")
 
+time.sleep(_time)
 sock.send(pickle.dumps({"type":"sell_item",
                         "operation": "create_item",
                         "title": "car",
@@ -86,6 +93,7 @@ sock.send(pickle.dumps({"type":"sell_item",
 """
 print("bid without start")
 
+time.sleep(_time)
 sock2.send(pickle.dumps({"type":"sell_item", "operation": "bid", 
                         "title": "car",
                         "amount": 500}))
@@ -96,6 +104,7 @@ sock2.send(pickle.dumps({"type":"sell_item", "operation": "bid",
 """
 
 print("start auction by another user")
+time.sleep(_time)
 sock2.send(pickle.dumps({"type":"sell_item",
                         "operation": "start_auction",
                         "title": "car"
@@ -107,6 +116,7 @@ sock2.send(pickle.dumps({"type":"sell_item",
 
 """
 
+time.sleep(_time)
 print("second user subscribed sell item")
 sock2.send(pickle.dumps({"type":"sell_item",
                         "operation": "watch",
@@ -119,6 +129,7 @@ sock2.send(pickle.dumps({"type":"sell_item",
 
 """
 
+time.sleep(_time)
 print("start auction")
 sock.send(pickle.dumps({"type":"sell_item",
                         "operation": "start_auction",
@@ -132,6 +143,7 @@ sock.send(pickle.dumps({"type":"sell_item",
 """
 print("bid")
 
+time.sleep(_time)
 sock2.send(pickle.dumps({"type":"sell_item", "operation": "bid", 
                         "title": "car",
                         "amount": 500}))
@@ -143,13 +155,18 @@ sock2.send(pickle.dumps({"type":"sell_item", "operation": "bid",
 """
 
 print("sell")
+time.sleep(_time)
 sock.send(pickle.dumps({"type":"sell_item",
                         "operation": "sell",
                         "title": "car"
                         }))
 
+time.sleep(_time)
 sock.send(pickle.dumps({"type":"close"}))
+time.sleep(_time)
 sock2.send(pickle.dumps({"type":"close"}))
+
+
 
 sock.close()
 sock2.close()
