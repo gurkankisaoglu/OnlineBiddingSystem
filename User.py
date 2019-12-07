@@ -167,7 +167,7 @@ class User:
     def release_item(self, item):
         try:
             self.items.remove(item)
-        except ValueError(e):
+        except ValueError as e:
             raise Exception("item not found")
     
     @_validation_decorator
