@@ -71,8 +71,9 @@ class Agent(Thread):
 
     def report(self, req):
         with self.lock:
-            self.send_object(self.current_user.report())
-            self.send_message("OK")
+            rep = self.current_user.report()
+            print(rep)
+            self.send_object(rep)
 
     def sell_item(self, req):
         with self.lock:
@@ -136,7 +137,9 @@ class Agent(Thread):
 
     def view(self, req):
         with self.lock:
-            self.send_object(self.items[req["title"]].view())
+            view = self.items[req["title"]].view()
+            print(view)
+            self.send_object(view)
 
     def history(self, req):
         with self.lock:

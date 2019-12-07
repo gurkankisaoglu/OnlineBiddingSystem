@@ -93,7 +93,7 @@ class User:
         ret = []
         for item in user.items:
             if (item.itemtype == itemtype or itemtype == None) and (item.state == state or state == 'all'):
-                ret.append(item)
+                ret.append(item.title)
         return ret
 
     @_validation_decorator
@@ -115,15 +115,16 @@ class User:
 
     @_validation_decorator
     def report(self):
-        items_sold = [i for i in self.items if i.state == "sold"]
-        items_onsale = [i for i in self.items if i.state == "active"]
-        
+        items_sold = [i.title for i in self.items if i.state == "sold"]
+        items_onsale = [i.title for i in self.items if i.state == "active"]
+        boug = [i.title for i in self.bought_items]
+
         return {
             "name": self.namesurname,
             "email": self.email,
             "items_sold": items_sold,
             "on_sale": items_onsale,
-            "bought": self.bought_items,
+            "bought": boug,
             "all_expenses": self.expenses,
             "income": self.income,
             "balance": self.balance

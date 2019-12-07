@@ -87,7 +87,7 @@ class Client:
             if resp["type"] == "message":
                 break
     
-    def list_items(self, email, item_type, state):
+    def list_items(self, email, item_type=None, state="all"):
         self.sock.send(pickle.dumps({"type":"user", 
                         "operation": "listitems", 
                         "email": email,
@@ -97,7 +97,7 @@ class Client:
         while True:
             resp = pickle.loads(self.sock.recv(1000))
             print(resp)
-            if resp["type"] == "message":
+            if resp["type"] == "object":
                 break
 
     def report(self):
@@ -107,7 +107,7 @@ class Client:
         while True:
             resp = pickle.loads(self.sock.recv(1000))
             print(resp)
-            if resp["type"] == "message":
+            if resp["type"] == "object":
                 break
     
     def sell_item(self, title):
@@ -181,7 +181,7 @@ class Client:
         while True:
             resp = pickle.loads(self.sock.recv(1000))
             print(resp)
-            if resp["type"] == "message":
+            if resp["type"] == "object":
                 break
 
     def history(self, title):
@@ -192,7 +192,7 @@ class Client:
         while True:
             resp = pickle.loads(self.sock.recv(1000))
             print(resp)
-            if resp["type"] == "message":
+            if resp["type"] == "object":
                 break
 
     def notification_thread(self, title=None, email=None, itemtype=None):

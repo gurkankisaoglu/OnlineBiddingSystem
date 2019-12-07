@@ -193,15 +193,16 @@ class SellItem:
                 self.state = "sold"
         
     def view(self):
+        bids = [(i["bidder"].email, i["amount"]) for i in self.bid_records]
         return {
             "title": self.title,
             "description": self.description,
             "auction_start": utilities.dateformatter(self.auction_start_timestamp ) or "Auction is not started yet",
             "auction_end": utilities.dateformatter(self.auction_end_timestamp) or "Auction is not end",
-            "bids": self.bid_records,
+            "bids": bids,
             "current_value": self.current_value,
-            "current_bidder": self.current_bidder,
-            "owner": self.owner
+            "current_bidder": self.current_bidder.email,
+            "owner": self.owner.email
         }
 
     def watch(self, user, watchmethod):
