@@ -24,8 +24,15 @@ def logout_view(request):
 
 @login_required
 def index(request):
-	return render(request,"base.html")
+	return render(request,'index.html')
 
+
+@login_required
+def sell_item_create(request):
+	return render(request, 'sell_item_form.html')
+
+def make_bid(request):
+	return render(request,'bid_form.html')
 
 def register(request):
 	'''Show and process registration page
