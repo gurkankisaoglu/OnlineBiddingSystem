@@ -1,0 +1,16 @@
+<html>
+    <body>
+        <h1> CENG 445 Ciftlik Bank Demo </h1>
+		<div align="right">
+		{% if request.user.is_authenticated %}
+			User: {{ request.user }} 
+			<a href="/accounts/logout?next=/ciftlikbank">Logout</a>
+		{% endif %}
+		</div>
+		<div>
+			{% block "body" %} 
+			{% endblock %}
+		</div>
+	<a href="/ciftlikbank">Main page</a>
+    </body>
+</html>
