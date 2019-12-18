@@ -34,6 +34,7 @@ class SellItem(models.Model):
 
 class BidRecord(models.Model):
     bidder =  models.ForeignKey(Person, on_delete=models.CASCADE)
+    bidder_name = models.CharField(max_length=30, null=True)
     item = models.ForeignKey(SellItem, on_delete=models.CASCADE)
     amount = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
