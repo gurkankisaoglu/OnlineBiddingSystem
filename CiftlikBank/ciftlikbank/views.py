@@ -57,7 +57,11 @@ def view_item(request,item_id):
 
 @login_required
 def start_auction(request, item_id):
+	message = ""
 	item = SellItem.objects.get(id=item_id)
+	owner = User.objects.get(id=item.owner_id)
+	if not owner == request.user.id:
+		redirect("/ciftlikbank/view/{}".format(item_id))
 	if not item.auction_started:
 		item.auction_started = True
 		item.state = "active"

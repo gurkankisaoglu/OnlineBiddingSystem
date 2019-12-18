@@ -30,6 +30,7 @@ class SellItem(models.Model):
     auction_started = models.BooleanField(default=False)
     current_bidder = models.ForeignKey(Person, null=True, related_name='current_bidder', on_delete=models.DO_NOTHING)
     auction_started_at = models.DateTimeField(null=True)
+    auction_ended_at = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
