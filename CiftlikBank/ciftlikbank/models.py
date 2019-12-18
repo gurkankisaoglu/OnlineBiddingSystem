@@ -10,6 +10,9 @@ class Person(models.Model):
     expenses = models.IntegerField()
     income = models.IntegerField()
 
+    def __str__(self):
+        return self.namesurname
+
 STATES = (
     ('onhold', 'ONHOLD'),
     ('active', 'ACTIVE'),
@@ -30,7 +33,8 @@ class SellItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    
+    def __str__(self):
+        return self.title
 
 class BidRecord(models.Model):
     bidder =  models.ForeignKey(Person, on_delete=models.CASCADE)
