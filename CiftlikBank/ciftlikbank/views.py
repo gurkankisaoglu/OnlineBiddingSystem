@@ -30,10 +30,6 @@ def index(request):
 	user_items = SellItem.objects.filter(owner=owner)
 	active_items = SellItem.objects.filter(state='active').exclude(owner=owner)
 	sold_items = SellItem.objects.filter(state='sold')
-	try:
-		person = Person.objects.get(user_id = request.user.id)
-	except:
-		person = ""
 
 	return render(request,'index.html',
 		{
