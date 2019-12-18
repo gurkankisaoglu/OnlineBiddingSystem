@@ -4,8 +4,12 @@
         <h1> CENG 445 Ciftlik Bank Demo </h1>
 		<div align="right">
 		{% if request.user.is_authenticated %}
-			User: {{ request.user }} 
-			<a href="/accounts/logout?next=/ciftlikbank">Logout</a>
+			User: {{ request.user }}<br>
+			{% if person %}
+				Balance: {{person.balance}}<br>
+				Reserved Balance: {{person.reserved_balance}}<br>
+			{% endif %}
+				<a href="/accounts/logout?next=/ciftlikbank">Logout</a>
 		{% endif %}
 		</div>
 		<div>

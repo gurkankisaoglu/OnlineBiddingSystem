@@ -30,13 +30,17 @@ def index(request):
 	user_items = SellItem.objects.filter(owner=owner)
 	active_items = SellItem.objects.filter(state='active').exclude(owner=owner)
 	sold_items = SellItem.objects.filter(state='sold')
-	
-	
+	try:
+		person = Person.objects.get(user_id = request.user.id)
+	except:
+		person = ""
+
 	return render(request,'index.html',
 		{
 			"user_items": user_items,
 			"active_items": active_items,
-			"sold_items": sold_items
+			"sold_items": sold_items,
+			"person": person
 		}
 	)
 
@@ -51,7 +55,7 @@ def view_item(request,item_id):
 	except ObjectDoesNotExist:
 		return redirect("/")
 	
-	return render(request, "item.html",{'item': item, 'bids': bids})
+	return render(request, "item.html",{'item': item, 'bids': bids,	"person": Person.objects.get(user_id = request.user.id)})
 
 @login_required
 def start_auction(request, item_id):
@@ -66,7 +70,7 @@ def start_auction(request, item_id):
 @login_required
 def sell_item(request,item_id):
 	item = SellItem.objects.get(id=item_id)
-	
+
 @login_required
 def sell_item_create(request):
 	message = "Here you can create SellItem"
@@ -109,7 +113,7 @@ def sell_item_create(request):
 			message = "SellItem Created with title:{}".format(title)
 	else:
 		form = SellItemForm()
-	return render(request, 'sell_item_form.html', {'form': form, 'message':message})
+	return render(request, 'sell_item_form.html', {'form': form, 'message':message, "person": Person.objects.get(user_id = request.user.id)})
 
 @login_required
 def make_bid(request):
