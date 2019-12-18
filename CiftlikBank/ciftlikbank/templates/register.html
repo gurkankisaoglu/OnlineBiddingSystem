@@ -2,7 +2,7 @@
 
 {% block "body" %}
   <h2>Sign up</h2>
-  {{message}}
+  <b>{{message}}</b>
   <form method="post">
     {% csrf_token %}
     {% for field in form %}

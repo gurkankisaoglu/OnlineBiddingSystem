@@ -29,7 +29,7 @@ def index(request):
 	owner = User.objects.get(id = request.user.id)
 	user_items = SellItem.objects.filter(owner=owner)
 	active_items = SellItem.objects.filter(state='active').exclude(owner=owner)
-	sold_items = SellItem.objects.filter(state='sold')
+	sold_items = SellItem.objects.filter(state='sold').exclude(owner=owner)
 	person = Person.objects.get(user_id = request.user.id)
 
 
@@ -43,7 +43,7 @@ def index(request):
 	)
 
 @login_required
-def view_item(request,item_id):
+def view_item(request,item_id,message=""):
 	try:
 		item = SellItem.objects.get(id=item_id)
 	except ObjectDoesNotExist:
@@ -53,17 +53,24 @@ def view_item(request,item_id):
 	except ObjectDoesNotExist:
 		return redirect("/")
 	
-	return render(request, "item.html",{'item': item, 'bids': bids,	"person": Person.objects.get(user_id = request.user.id)})
+	return render(request, "item.html",{
+								'item': item, 'bids': bids,	
+								"person": Person.objects.get(user_id = request.user.id),
+								"message": message
+								})
 
 @login_required
 def start_auction(request, item_id):
+	message = ""
 	item = SellItem.objects.get(id=item_id)
-	if not item.auction_started:
+	if not item.owner_id == request.user.id:
+		return view_item(request,item_id)
+	if item.state == "onhold":
 		item.auction_started = True
 		item.state = "active"
 		item.auction_started_at = datetime.datetime.now()
 		item.save()
-	return redirect("/ciftlikbank/view/{}".format(item_id))
+	return view_item(request,item_id)
 
 @login_required
 def bid_item(request, item_id):
@@ -134,6 +141,28 @@ def bid_item(request, item_id):
 @login_required
 def sell_item(request,item_id):
 	item = SellItem.objects.get(id=item_id)
+	if not item.owner_id == request.user.id:
+		return view_item(request,item_id)
+	if not item.state == 'active':
+		return view_item(request,item_id)
+	
+	if item.current_bidder:
+		item.owner = item.current_bidder
+	item.state = 'sold'
+	item.auction_ended_at = datetime.datetime.now()
+	item.save()
+	return view_item(request,item_id)
+
+@login_required
+def delete_item(request,item_id):
+	item = SellItem.objects.get(id=item_id)
+	if not item.owner_id == request.user.id:
+		return view_item(request,item_id)
+	if item.state == 'active':
+		return view_item(request,item_id,"ACTIVE ITEMS CAN NOT BE DELETED")
+	
+	item.delete()
+	return redirect('/ciftlikbank')
 
 @login_required
 def sell_item_create(request):
@@ -206,4 +235,4 @@ def register(request):
 	else:
 		form = SignUpForm()
 	    
-	return render(request, 'register.html', {'form': form, 'message': "message from view"})
+	return render(request, 'register.html', {'form': form, 'message': "Ciftlik Bank'a kaydol!"})
