@@ -64,14 +64,14 @@
             </form>
           </div>
          
-          <div style="margin-left: 30px; width:100px; float: left;">
+          <div style="margin-left: 30px; width:100px; float: left; ">
             {% if item.auction_started %}
             <form action="/ciftlikbank/view/sell_item/{{item.id}}">
               <input type="submit" value="Sell Item" />
             </form>
             {% endif %}
           </div>
-          <div style=" float: left;">
+          <div style=" margin-left:30px; width:100px; float: left;">
               <form action="/ciftlikbank/view/delete_item/{{item.id}}">
                 <input type="submit" value="Delete Item" />
               </form>

@@ -169,4 +169,4 @@ def register(request):
 	else:
 		form = SignUpForm()
 	    
-	return render(request, 'register.html', {'form': form, 'message': "message from view"})
+	return render(request, 'register.html', {'form': form, 'message': "Ciftlik Bank'a kaydol!"})
