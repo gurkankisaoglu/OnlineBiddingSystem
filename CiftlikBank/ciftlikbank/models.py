@@ -29,6 +29,7 @@ class SellItem(models.Model):
     state = models.CharField(max_length=6,choices=STATES, default='onhold')
     auction_started = models.BooleanField(default=False)
     current_bidder = models.ForeignKey(Person, null=True, related_name='current_bidder', on_delete=models.DO_NOTHING)
+    current_value = models.IntegerField(default=0)
     auction_started_at = models.DateTimeField(null=True)
     auction_ended_at = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
