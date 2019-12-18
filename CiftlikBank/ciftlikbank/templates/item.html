@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block "body" %}
+  <h3>Item Page</h3>
+  {% if item.auction_started %}
+  Auction is started at {{item.auction_started_at}}
+  {% else %}
+  Auction is not started yet!
+  {% endif %}
+  <div style="width: 100%; overflow: hidden;">
+      <div style="width: 680px; float: left;"> 
+        <h4>Item View</h4>
+        <table style="width:100%">
+            <tr>
+              <th>Title</th>
+              <td>{{item.title}}</td>
+            </tr>
+            <tr>
+              <th>ItemType</th>
+              <td>{{item.itemtype}}</td>
+            </tr>
+            <tr>
+              <th>Description</th>
+              <td>{{item.description}}</td>
+            </tr>
+            <tr>
+              <th>State</th>
+              <td>{{item.state}}</td>
+            </tr>
+            <tr>
+              <th>Auction Type</th>
+              <td>{{item.auction_type}}</td>
+            </tr>
+            <tr>
+              <th>Is Auction Started</th>
+              <td>{{item.auction_started}}</td>
+            </tr>
+            <tr>
+                <th>Auction Started At</th>
+                <td>{{item.auction_started_at}}</td>
+              </tr>
+            <tr>
+              <th>Current Bidder</th>
+              <td>{{item.current_bidder}}</td>
+            </tr>
+            <tr>
+              <th>Item Created At</th>
+              <td>{{item.created_at}}</td>
+            </tr>
+            <tr>
+              <th>Image</th>
+              <td>{{item.image}}</td>
+            </tr>
+        </table>
+        {% ifequal user item.owner %}
+        <div style="width: 100%; overflow: hidden;">
+          <div style="width: 130px; float: left;">
+            <form action="start_auction/{{item.id}}">
+              <input type="submit" value="Start Auction" />
+            </form>
+          </div>
+          <div style="width:100%">
+            {% if item.auction_started %}
+            <form action="sell_item/{{item.id}}">
+              <input type="submit" value="Sell Item" />
+            </form>
+            {% endif %}
+          </div>
+          
+          {% endifequal %}
+        </div>
+      </div>
+      
+      <div style="margin-left: 700px;"> 
+        <h4>Bid Records</h4>
+        <table style="width:100%">
+            <tr>
+              <th>Bidder</th>
+              <th>Amount</th>
+              <th>At</th>
+            </tr>
+            {% for bid in bids %}
+              <tr>
+                <td>{{bid.user_id}}</td>
+                <td>{{bid.amount}}</td>
+                <td>{{bid.created_at}}</td>
+              </tr>
+            {% endfor %}
+          </table>
+      </div>
+  </div>
+  
+{% endblock %}
+
