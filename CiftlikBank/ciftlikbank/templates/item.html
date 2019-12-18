@@ -20,6 +20,10 @@
               <td>{{item.title}}</td>
             </tr>
             <tr>
+              <th>Owner</th>
+              <td>{{item.owner}}</td>
+            </tr>
+            <tr>
               <th>ItemType</th>
               <td>{{item.itemtype}}</td>
             </tr>
@@ -101,12 +105,14 @@
             {% endfor %}
         </table>
         <div style="width:100%">
-          {% if item.auction_started %}
-          <form method="POST" action="/ciftlikbank/view/bid_item/{{item.id}}">
-            {% csrf_token %}
-            <input type="number" name="bid_value" min="0"/>
-            <input type="submit" value="Bid" />
-          </form>
+          {% if item.owner != request.user %}
+            {% if item.state == 'active' %}
+            <form method="POST" action="/ciftlikbank/view/bid_item/{{item.id}}">
+              {% csrf_token %}
+              <input type="number" name="bid_value" min="0"/>
+              <input type="submit" value="Bid" />
+            </form>
+            {% endif %}
           {% endif %}
         </div>
       </div>

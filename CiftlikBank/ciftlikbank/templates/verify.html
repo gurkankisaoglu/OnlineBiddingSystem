@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block "body" %}
+  <h2>Sign up</h2>
+  <b>{{message}}</b>
+  <form method="post">
+    {% csrf_token %}
+    <input type="text" name="email" >
+    <input type="text" name="verification" >
+    <button type="submit">Verify Email</button>
+  </form>
+{% endblock %}

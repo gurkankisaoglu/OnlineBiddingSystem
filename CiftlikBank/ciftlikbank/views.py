@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from ciftlikbank.forms import SignUpForm, SellItemForm
 import json
 import datetime
+import secrets
 
 def sign_in(request):
 	if 'username' in request.POST and 'password' in request.POST:
@@ -74,8 +75,10 @@ def start_auction(request, item_id):
 
 @login_required
 def bid_item(request, item_id):
+	item = SellItem.objects.get(id=item_id)
+	if item.state != "active":
+		return view_item(request, item_id)
 	if request.method == 'POST':
-		item = SellItem.objects.get(id=item_id)
 		amount = int(request.POST.get("bid_value", 0))
 		auction_type = json.loads(item.auction_type)
 		person = Person.objects.get(user_id=request.user.id)
@@ -87,14 +90,21 @@ def bid_item(request, item_id):
 				remaining_balance = person.balance - person.reserved_balance
 			#make bid operations
 			if amount - item.current_value < auction_type["mindelta"] or amount > remaining_balance:
-				return view_item(request, item_id)
+				return view_item(request, item_id, message="Wrong amount!")
 			elif amount > auction_type["instantsell"]:
 				#user update
-				person.balance -= amount
-				person.reserved_balance -= item.current_value
-				person.save()
+				if item.current_bidder == person.user:
+					person.balance -= amount
+					person.reserved_balance -= item.current_value
+					person.save()
+				else:
+					item.current_bidder.reserved_balance -= item.current_value
+					item.current_bidder.save()
 				#item update
+				item.owner.balance += item.current_value
+				item.owner.save()
 				item.state = "sold"
+				item.auction_ended_at = datetime.datetime.now()
 				item.owner = request.user.id
 				item.current_bidder = request.user
 				item.save()
@@ -104,6 +114,10 @@ def bid_item(request, item_id):
 				#user update
 				if item.current_bidder == request.user:
 					person.reserved_balance -= item.current_value
+				elif item.current_bidder:
+					curr = Person.objects.get(user_id=item.current_bidder)
+					curr.reserved_balance -= item.current_value
+					curr.save()
 				person.reserved_balance += amount
 				person.save()
 				#item update
@@ -113,7 +127,9 @@ def bid_item(request, item_id):
 				BidRecord.objects.create(bidder=request.user, 
 										 bidder_name=request.user.username, 
 										 item=item, amount=amount)
-		elif auction_type["type"] == "instantincrement" and amount > auction_type["minbid"] and amount <= person.balance - person.reserved_balance:
+		elif auction_type["type"] == "instantincrement":
+			if not (amount > auction_type["minbid"] and amount <= person.balance - person.reserved_balance):
+				return view_item(request, item_id, message="Wrong amount!")
 			if item.current_bidder == request.user:
 				item.current_value += amount
 				item.save()
@@ -126,7 +142,10 @@ def bid_item(request, item_id):
 					total_bid += bid.amount
 				if total_bid > item.current_value:
 					if total_bid >= auction_type["autosell"]:
+						item.owner.balance += item.current_value
+						item.owner.save()
 						item.state = "sold"
+						item.auction_ended_at = datetime.datetime.now()
 					item.current_value = total_bid
 					item.current_bidder = request.user
 					item.save()
@@ -147,6 +166,14 @@ def sell_item(request,item_id):
 		return view_item(request,item_id)
 	
 	if item.current_bidder:
+		person = Person.objects.get(user=item.current_bidder)
+		if json.loads(item.auction_type)["type"] == "increment":
+			person.balance -= item.current_value
+			person.reserved_balance -= item.current_value
+			person.save()
+		owner = Person.objects.get(user=item.owner)
+		owner.balance += item.current_value
+		owner.save()
 		item.owner = item.current_bidder
 	item.state = 'sold'
 	item.auction_ended_at = datetime.datetime.now()
@@ -227,12 +254,32 @@ def register(request):
 			namesurname =  form.cleaned_data.get('namesurname')
 			balance =  form.cleaned_data.get('balance')
 			user = authenticate(username=username,email=email,password=password)
+			user.is_active = False
+			user.save()
 			person = Person.objects.create(user=user,namesurname=namesurname,balance=balance,
 											reserved_balance=0,expenses=0,income=0)
-
+			person.verification_number = secrets.token_urlsafe(32)
+			print("###############")
+			print("user email => ", email)
+			print("verification number => " ,person.verification_number)
+			print("###############")
+			person.save()
 			login(request, user)
 			return redirect('home')
 	else:
 		form = SignUpForm()
 	    
 	return render(request, 'register.html', {'form': form, 'message': "Ciftlik Bank'a kaydol!"})
+
+def verify(request):
+	if request.method == "POST":
+		email = request.POST.get("email")
+		verf = request.POST.get("verification")
+		user = User.objects.get(email=email)
+		person = Person.objects.get(user=user)
+		if person.verification_number == verf:
+			user.is_active = True
+			user.save()
+		return redirect('/accounts/logout?next=/ciftlikbank')
+	else:
+		return render(request, 'verify.html')

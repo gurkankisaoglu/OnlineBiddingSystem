@@ -7,8 +7,11 @@ class PersonAdmin(admin.ModelAdmin):
 class SellItemAdmin(admin.ModelAdmin):
   list_display = ("title", "owner", "itemtype", "auction_type", "state", "current_bidder", "current_value", "description", "auction_started_at", "created_at")
 
+class BidRecordAdmin(admin.ModelAdmin):
+  list_display = ("bidder", "item", "amount", "created_at")
+
 # Register your models here.
 admin.site.register(Person, PersonAdmin)
 admin.site.register(SellItem, SellItemAdmin)
-admin.site.register(BidRecord)
+admin.site.register(BidRecord, BidRecordAdmin)
 admin.site.register(UserNotification)

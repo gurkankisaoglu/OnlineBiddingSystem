@@ -9,6 +9,7 @@ class Person(models.Model):
     reserved_balance = models.IntegerField()
     expenses = models.IntegerField()
     income = models.IntegerField()
+    verification_number = models.CharField(max_length=30, null=True)
 
     def __str__(self):
         return self.namesurname

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block "body" %}
 <h2> Login Page </h2>
-You are not authenticated to access this page
 <form method="post">
 {% csrf_token %}
 {{ form.as_p }}
@@ -10,4 +9,5 @@ You are not authenticated to access this page
 </form>
 <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
 <p><a href="{% url 'register' %}">Register</a></p> 
+<p><a href="{% url 'verify' %}">Verify</a></p> 
 {% endblock %}
