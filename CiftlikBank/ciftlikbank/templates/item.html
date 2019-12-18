@@ -1,9 +1,13 @@
 {% extends 'base.html' %}
-
 {% block "body" %}
+  {{message}}
   <h3>Item Page</h3>
   {% if item.auction_started %}
-  Auction is started at {{item.auction_started_at}}
+    Auction is started at {{item.auction_started_at}}
+    <br>
+    {% if item.auction_ended_at %}
+    Auction is ended at {{item.auction_ended_at}} <br>
+    {% endif %}
   {% else %}
   Auction is not started yet!
   {% endif %}
@@ -53,20 +57,25 @@
             </tr>
         </table>
         {% ifequal user item.owner %}
-        <div style="width: 100%; overflow: hidden;">
-          <div style="width: 130px; float: left;">
-            <form action="start_auction/{{item.id}}">
+        <div style="width: 100%;">
+          <div style="width: 100px; float: left;">
+            <form action="/ciftlikbank/view/start_auction/{{item.id}}">
               <input type="submit" value="Start Auction" />
             </form>
           </div>
-          <div style="width:100%">
+         
+          <div style="margin-left: 30px; width:100px; float: left;">
             {% if item.auction_started %}
-            <form action="sell_item/{{item.id}}">
+            <form action="/ciftlikbank/view/sell_item/{{item.id}}">
               <input type="submit" value="Sell Item" />
             </form>
             {% endif %}
           </div>
-          
+          <div style=" float: left;">
+              <form action="/ciftlikbank/view/delete_item/{{item.id}}">
+                <input type="submit" value="Delete Item" />
+              </form>
+          </div>
         </div>
         {% endifequal %}
       </div>
