@@ -66,6 +66,72 @@ def start_auction(request, item_id):
 	return redirect("/ciftlikbank/view/{}".format(item_id))
 
 @login_required
+def bid_item(request, item_id):
+	if request.method == 'POST':
+		item = SellItem.objects.get(id=item_id)
+		amount = int(request.POST.get("bid_value", 0))
+		auction_type = json.loads(item.auction_type)
+		person = Person.objects.get(user_id=request.user.id)
+		if auction_type["type"] == "increment":
+			#Set remining balance
+			if item.current_bidder == request.user:
+				remaining_balance = person.balance - person.reserved_balance + item.current_value
+			else:
+				remaining_balance = person.balance - person.reserved_balance
+			#make bid operations
+			if amount - item.current_value < auction_type["mindelta"] or amount > remaining_balance:
+				return view_item(request, item_id)
+			elif amount > auction_type["instantsell"]:
+				#user update
+				person.balance -= amount
+				person.reserved_balance -= item.current_value
+				person.save()
+				#item update
+				item.state = "sold"
+				item.owner = request.user.id
+				item.current_bidder = request.user
+				item.save()
+				BidRecord.objects.create(bidder=request.user, bidder_name=request.user.username, 
+										 item=item, amount=amount)
+			else:
+				#user update
+				if item.current_bidder == request.user:
+					person.reserved_balance -= item.current_value
+				person.reserved_balance += amount
+				person.save()
+				#item update
+				item.current_value = amount
+				item.current_bidder = request.user
+				item.save()
+				BidRecord.objects.create(bidder=request.user, 
+										 bidder_name=request.user.username, 
+										 item=item, amount=amount)
+		elif auction_type["type"] == "instantincrement" and amount > auction_type["minbid"] and amount <= person.balance - person.reserved_balance:
+			if item.current_bidder == request.user:
+				item.current_value += amount
+				item.save()
+				person.balance -= amount
+				person.save()
+			else:
+				bids = item.bidrecord_set.filter(bidder=request.user)
+				total_bid = amount
+				for bid in bids:
+					total_bid += bid.amount
+				if total_bid > item.current_value:
+					if total_bid >= auction_type["autosell"]:
+						item.state = "sold"
+					item.current_value = total_bid
+					item.current_bidder = request.user
+					item.save()
+					person.balance -= amount
+					person.save()
+			BidRecord.objects.create(bidder=request.user, 
+									 bidder_name=request.user.username, 
+									 item=item, amount=amount)
+
+		return view_item(request, item_id)
+
+@login_required
 def sell_item(request,item_id):
 	item = SellItem.objects.get(id=item_id)
 

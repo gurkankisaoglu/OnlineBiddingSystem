@@ -28,7 +28,7 @@ class SellItem(models.Model):
     image = models.ImageField(upload_to='media', null=True, blank=True)
     state = models.CharField(max_length=6,choices=STATES, default='onhold')
     auction_started = models.BooleanField(default=False)
-    current_bidder = models.ForeignKey(Person, null=True, related_name='current_bidder', on_delete=models.DO_NOTHING)
+    current_bidder = models.ForeignKey(User, null=True, related_name='current_bidder', on_delete=models.DO_NOTHING)
     current_value = models.IntegerField(default=0)
     auction_started_at = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -38,7 +38,7 @@ class SellItem(models.Model):
         return self.title
 
 class BidRecord(models.Model):
-    bidder =  models.ForeignKey(Person, on_delete=models.CASCADE)
+    bidder =  models.ForeignKey(User, on_delete=models.CASCADE)
     bidder_name = models.CharField(max_length=30, null=True)
     item = models.ForeignKey(SellItem, on_delete=models.CASCADE)
     amount = models.IntegerField()

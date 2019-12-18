@@ -44,6 +44,10 @@
               <td>{{item.current_bidder}}</td>
             </tr>
             <tr>
+              <th>Current Bid</th>
+              <td>{{item.current_value}}</td>
+            </tr>
+            <tr>
               <th>Item Created At</th>
               <td>{{item.created_at}}</td>
             </tr>
@@ -86,7 +90,16 @@
                 <td>{{bid.created_at}}</td>
               </tr>
             {% endfor %}
-          </table>
+        </table>
+        <div style="width:100%">
+          {% if item.auction_started %}
+          <form method="POST" action="/ciftlikbank/view/bid_item/{{item.id}}">
+            {% csrf_token %}
+            <input type="number" name="bid_value" min="0"/>
+            <input type="submit" value="Bid" />
+          </form>
+          {% endif %}
+        </div>
       </div>
   </div>
   
