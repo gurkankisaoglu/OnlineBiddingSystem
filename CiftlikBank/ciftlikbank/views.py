@@ -244,10 +244,6 @@ def sell_item_create(request):
 		form = SellItemForm()
 	return render(request, 'sell_item_form.html', {'form': form, 'message':message, "person": Person.objects.get(user_id = request.user.id)})
 
-@login_required
-def make_bid(request):
-	return render(request,'bid_form.html')
-
 def register(request):
 	'''Show and process registration page
 			 uid is required for admin users to register a specific student
