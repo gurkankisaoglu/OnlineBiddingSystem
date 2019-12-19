@@ -27,13 +27,16 @@ def logout_view(request):
 
 @login_required
 def index(request):
-	owner = User.objects.get(id = request.user.id)
-	user_items = SellItem.objects.filter(owner=owner)
-	active_items = SellItem.objects.filter(state='active').exclude(owner=owner)
-	sold_items = SellItem.objects.filter(state='sold').exclude(owner=owner)
-	person = Person.objects.get(user_id = request.user.id)
+	try:
+		owner = User.objects.get(id = request.user.id)
+		user_items = SellItem.objects.filter(owner=owner)
+		active_items = SellItem.objects.filter(state='active').exclude(owner=owner)
+		sold_items = SellItem.objects.filter(state='sold').exclude(owner=owner)
+		person = Person.objects.get(user_id = request.user.id)
 
-
+	except:
+		logout_view(request)
+		return redirect('/ciftlikbank')
 	return render(request,'index.html',
 		{
 			"user_items": user_items,
@@ -75,7 +78,10 @@ def start_auction(request, item_id):
 
 @login_required
 def bid_item(request, item_id):
-	item = SellItem.objects.get(id=item_id)
+	try:
+		item = SellItem.objects.get(id=item_id)
+	except:
+		return redirect('/ciftlikbank')
 	if item.state != "active":
 		return view_item(request, item_id)
 	if request.method == 'POST':
@@ -159,7 +165,10 @@ def bid_item(request, item_id):
 
 @login_required
 def sell_item(request,item_id):
-	item = SellItem.objects.get(id=item_id)
+	try:
+		item = SellItem.objects.get(id=item_id)
+	except:
+		return redirect('/ciftlikbank')
 	if not item.owner_id == request.user.id:
 		return view_item(request,item_id)
 	if not item.state == 'active':
