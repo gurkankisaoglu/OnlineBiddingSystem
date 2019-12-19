@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.contrib.auth import  authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.db import
 from ciftlikbank.models import Person, SellItem, BidRecord
 from django.contrib.auth.models import User
 from ciftlikbank.forms import SignUpForm, SellItemForm
@@ -243,6 +244,12 @@ def sell_item_create(request):
 	else:
 		form = SellItemForm()
 	return render(request, 'sell_item_form.html', {'form': form, 'message':message, "person": Person.objects.get(user_id = request.user.id)})
+
+
+@login_required
+def balance(request):
+	person = Person.objects.filter(user = request.user).select_for_update()
+	
 
 def register(request):
 	'''Show and process registration page
