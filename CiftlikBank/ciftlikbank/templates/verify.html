@@ -1,12 +1,21 @@
 {% extends 'base.html' %}
 
 {% block "body" %}
-  <h2>Sign up</h2>
+  <h2>Verify Your Email</h2>
   <b>{{message}}</b>
   <form method="post">
     {% csrf_token %}
-    <input type="text" name="email" >
-    <input type="text" name="verification" >
+    <table>
+      <tr>
+        <th>Email</th>
+        <th>Verification Number</th>
+      </tr>
+      <tr>
+        <td><input type="text" name="email"></td>
+        <td><input type="text" name="verification"></td>
+      </tr>
+    </table>
+
     <button type="submit">Verify Email</button>
   </form>
 {% endblock %}
