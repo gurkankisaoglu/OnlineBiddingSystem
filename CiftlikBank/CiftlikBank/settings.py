@@ -130,4 +130,3 @@ STATIC_URL = '/static/'
 # Uploaded Files
 MEDIA_URL = '/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-print(MEDIA_ROOT)

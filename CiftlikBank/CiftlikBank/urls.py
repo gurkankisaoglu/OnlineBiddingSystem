@@ -22,7 +22,5 @@ urlpatterns = [
      url(r'^admin/', admin.site.urls),
     url(r'^ciftlikbank/', include('ciftlikbank.urls')),
     url(r'^', include('ciftlikbank.urls')),
-    url(r'^accounts/password_change/done/', include('ciftlikbank.urls')),
-    url(r'^accounts/password_reset/done/', include('ciftlikbank.urls')),
     url(r'^accounts/', include('django.contrib.auth.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]

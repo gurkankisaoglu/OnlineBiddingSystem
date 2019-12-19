@@ -86,12 +86,12 @@
       <br>
       <form method="POST" action="/ciftlikbank/user_view/addbalance/{{request.user.id}}">
           {% csrf_token %}
-          <input type="number" name="addbalance" min="0" >
+          <input type="number" name="addbalance" min="0" required>
           <button type="submit">Add Balance</button>
       </form> <br>
       <form method="POST" action="/ciftlikbank/user_view/withdraw/{{request.user.id}}">
           {% csrf_token %}
-          <input type="number" name="withdraw" min="0" max="{{max_withdraw}}">
+          <input type="number" name="withdraw" min="0" max="{{max_withdraw}}" required>
           <button type="submit">Withdraw</button>
       </form>
       {% endif %}

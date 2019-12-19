@@ -69,7 +69,7 @@
             </tr>
             <tr>
               <th>Image</th>
-              <td><img src="{{item.image.url}}" height="50px" width="50px"></td>
+              <td>{{item.image.url}}</td>
             </tr>
         </table>
         {% ifequal user item.owner %}
@@ -117,7 +117,7 @@
             {% if item.state == 'active' %}
             <form method="POST" action="/ciftlikbank/view/bid_item/{{item.id}}">
               {% csrf_token %}
-              <input type="number" name="bid_value" min="0"/>
+              <input type="number" name="bid_value" min="0" required/>
               <input type="submit" value="Bid" />
             </form>
             {% endif %}

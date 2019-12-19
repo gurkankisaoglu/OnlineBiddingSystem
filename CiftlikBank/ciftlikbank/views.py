@@ -55,8 +55,8 @@ def view_user(request,uid, message=""):
 	try:
 		view_person = Person.objects.get(user_id = uid)
 		max_withdraw = view_person.balance - view_person.reserved_balance
-		own_items = SellItem.objects.filter(owner_id = uid )
-		bought_items = SellItem.objects.filter(owner_id = uid,old_owner_id__isnull = False)
+		own_items = SellItem.objects.filter(owner_id = uid,state='onhold')
+		bought_items = SellItem.objects.filter(owner_id = uid,old_owner_id__isnull = False).exclude(old_owner_id=uid)
 		sold_items = SellItem.objects.filter(old_owner_id = uid)
 	except:
 		return redirect('/ciftlikbank')
@@ -89,7 +89,6 @@ def withdraw(request,uid):
 def view_item(request,item_id,message=""):
 	try:
 		item = SellItem.objects.get(id=item_id)
-		print(dir(item.image.url))
 	except:
 		return redirect("/ciftlikbank")
 	try:
@@ -123,7 +122,6 @@ def start_auction(request, item_id):
 
 @background
 def decrement_price(item_id):
-	print("called with item_id: ", item_id)
 	with transaction.atomic():
 		item = SellItem.objects.select_for_update().get(id=item_id)
 		auction_type = json.loads(item.auction_type)
@@ -147,6 +145,8 @@ def bid_item(request, item_id):
 				owner = Person.objects.select_for_update().get(user_id=item.owner)
 				if item.current_bidder:
 					current_bidder = Person.objects.select_for_update().get(user_id=item.current_bidder.id)
+				else:
+					current_bidder = None
 			except:
 				return redirect('/ciftlikbank')
 			if item.state != "active":
@@ -170,9 +170,17 @@ def bid_item(request, item_id):
 						person.expenses += amount
 						person.reserved_balance -= item.current_value
 						person.save()
-					elif current_bidder:
+					else:
+						print(person)
+						person.balance -= amount
+						person.expenses += amount
+						person.save()
+
+					
+					if current_bidder:
 						current_bidder.reserved_balance -= item.current_value
 						current_bidder.save()
+
 					#item update
 					owner.balance += amount
 					owner.income += amount
@@ -227,7 +235,7 @@ def bid_item(request, item_id):
 							owner.balance += item.current_value + amount
 							owner.income += item.current_value + amount
 							owner.save()
-							item.old_owner = owner
+							item.old_owner = owner.user
 							item.owner = request.user
 							item.state = "sold"
 							item.auction_ended_at = datetime.datetime.now()
@@ -299,9 +307,11 @@ def sell_item(request,item_id):
 			if json.loads(item.auction_type)["type"] == "increment":
 				person.balance -= item.current_value
 				person.reserved_balance -= item.current_value
+				person.expenses += item.current_value
 				person.save()
 			owner = Person.objects.get(user=item.owner)
 			owner.balance += item.current_value
+			owner.income += item.current_value
 			owner.save()
 			item.owner = item.current_bidder
 		item.state = 'sold'
