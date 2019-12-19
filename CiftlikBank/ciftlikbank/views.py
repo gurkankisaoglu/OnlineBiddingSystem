@@ -34,7 +34,7 @@ def index(request):
 	active_items = SellItem.objects.filter(state='active').exclude(owner=owner)
 	sold_items = SellItem.objects.filter(state='sold').exclude(owner=owner)
 	person = Person.objects.get(user_id = request.user.id)
-	print(person.balance)
+	
 	return render(request,'index.html',
 		{
 			"user_items": user_items,
@@ -63,7 +63,6 @@ def view_item(request,item_id,message=""):
 
 @login_required
 def start_auction(request, item_id):
-	message = ""
 	item = SellItem.objects.get(id=item_id)
 	if not item.owner_id == request.user.id:
 		return view_item(request,item_id)
@@ -76,115 +75,124 @@ def start_auction(request, item_id):
 
 @login_required
 def bid_item(request, item_id):
-	try:
-		item = SellItem.objects.get(id=item_id)
-	except:
-		return redirect('/ciftlikbank')
-	if item.state != "active":
-		return view_item(request, item_id)
-	if request.method == 'POST':
-		amount = int(request.POST.get("bid_value", 0))
-		auction_type = json.loads(item.auction_type)
-		person = Person.objects.get(user_id=request.user.id)
-		if auction_type["type"] == "increment":
-			#Set remining balance
-			if item.current_bidder == request.user:
-				remaining_balance = person.balance - person.reserved_balance + item.current_value
-			else:
-				remaining_balance = person.balance - person.reserved_balance
-			#make bid operations
-			if amount - item.current_value < auction_type["mindelta"] or amount > remaining_balance:
-				return view_item(request, item_id, message="Wrong amount!")
-			elif amount > auction_type["instantsell"]:
-				#user update
-				if item.current_bidder == person.user:
-					person.balance -= amount
-					person.reserved_balance -= item.current_value
-					person.save()
-				else:
-					item.current_bidder.reserved_balance -= item.current_value
-					item.current_bidder.save()
-				#item update
-				item.owner.balance += item.current_value
-				item.owner.save()
-				item.state = "sold"
-				item.auction_ended_at = datetime.datetime.now()
-				item.owner = request.user.id
-				item.current_bidder = request.user
-				item.save()
-				BidRecord.objects.create(bidder=request.user, bidder_name=request.user.username, 
-										 item=item, amount=amount)
-			else:
-				#user update
+	with transaction.atomic():
+		if request.method == 'POST':
+			try:
+				item = SellItem.objects.select_for_update().get(id=item_id)
+				person = Person.objects.select_for_update().get(user_id=request.user.id)
+				if item.current_bidder:
+					current_bidder = Person.objects.select_for_update().get(user_id=item.current_bidder.id)
+			except:
+				return redirect('/ciftlikbank')
+			if item.state != "active":
+				return view_item(request, item_id)
+
+			amount = int(request.POST.get("bid_value", 0))
+			auction_type = json.loads(item.auction_type)
+			if auction_type["type"] == "increment":
+				#Set remining balance
 				if item.current_bidder == request.user:
-					person.reserved_balance -= item.current_value
-				elif item.current_bidder:
-					curr = Person.objects.get(user_id=item.current_bidder)
-					curr.reserved_balance -= item.current_value
-					curr.save()
-				person.reserved_balance += amount
-				person.save()
-				#item update
-				item.current_value = amount
-				item.current_bidder = request.user
-				item.save()
-				BidRecord.objects.create(bidder=request.user, 
-										 bidder_name=request.user.username, 
-										 item=item, amount=amount)
-		elif auction_type["type"] == "instantincrement":
-			if not (amount > auction_type["minbid"] and amount <= person.balance - person.reserved_balance):
-				return view_item(request, item_id, message="Wrong amount!")
-			if item.current_bidder == request.user:
-				item.current_value += amount
-				item.save()
-				person.balance -= amount
-				person.save()
-			else:
-				bids = item.bidrecord_set.filter(bidder=request.user)
-				total_bid = amount
-				for bid in bids:
-					total_bid += bid.amount
-				if total_bid > item.current_value:
-					if total_bid >= auction_type["autosell"]:
-						item.owner.balance += item.current_value
-						item.owner.save()
-						item.state = "sold"
-						item.auction_ended_at = datetime.datetime.now()
-					item.current_value = total_bid
+					remaining_balance = person.balance - person.reserved_balance + item.current_value
+				else:
+					remaining_balance = person.balance - person.reserved_balance
+				#make bid operations
+				if amount - item.current_value < auction_type["mindelta"] or amount > remaining_balance:
+					return view_item(request, item_id, message="Wrong amount!")
+				elif amount > auction_type["instantsell"]:
+					#user update
+					if item.current_bidder == person.user:
+						person.balance -= amount
+						person.reserved_balance -= item.current_value
+						person.save()
+					else:
+						item.current_bidder.reserved_balance -= item.current_value
+						item.current_bidder.save()
+					#item update
+					item.owner.balance += item.current_value
+					item.owner.save()
+					item.state = "sold"
+					item.auction_ended_at = datetime.datetime.now()
+					item.old_owner = item.owner
+					item.owner = request.user
 					item.current_bidder = request.user
+					item.save()
+					BidRecord.objects.create(bidder=request.user, bidder_name=request.user.username, 
+											item=item, amount=amount)
+				else:
+					#user update
+					if item.current_bidder == request.user:
+						person.reserved_balance -= item.current_value
+					elif item.current_bidder:
+						curr = Person.objects.get(user_id=item.current_bidder)
+						curr.reserved_balance -= item.current_value
+						curr.save()
+					person.reserved_balance += amount
+					person.save()
+					#item update
+					item.current_value = amount
+					item.current_bidder = request.user
+					item.save()
+					BidRecord.objects.create(bidder=request.user, 
+											bidder_name=request.user.username, 
+											item=item, amount=amount)
+			elif auction_type["type"] == "instantincrement":
+				if not (amount > auction_type["minbid"] and amount <= person.balance - person.reserved_balance):
+					return view_item(request, item_id, message="Wrong amount!")
+				if item.current_bidder == request.user:
+					item.current_value += amount
 					item.save()
 					person.balance -= amount
 					person.save()
-			BidRecord.objects.create(bidder=request.user, 
-									 bidder_name=request.user.username, 
-									 item=item, amount=amount)
+				else:
+					bids = item.bidrecord_set.filter(bidder=request.user)
+					total_bid = amount
+					for bid in bids:
+						total_bid += bid.amount
+					if total_bid > item.current_value:
+						if total_bid >= auction_type["autosell"]:
+							item.owner.balance += item.current_value
+							item.owner.save()
+							item.old_owner = item.owner
+							item.state = "sold"
+							item.auction_ended_at = datetime.datetime.now()
+						item.current_value = total_bid
+						item.current_bidder = request.user
+						item.save()
+						person.balance -= amount
+						person.save()
+				BidRecord.objects.create(bidder=request.user, 
+										bidder_name=request.user.username, 
+										item=item, amount=amount)
 
-		return view_item(request, item_id)
+			return view_item(request, item_id)
 
 @login_required
 def sell_item(request,item_id):
-	try:
-		item = SellItem.objects.get(id=item_id)
-	except:
-		return redirect('/ciftlikbank')
-	if not item.owner_id == request.user.id:
-		return view_item(request,item_id)
-	if not item.state == 'active':
-		return view_item(request,item_id)
-	
-	if item.current_bidder:
-		person = Person.objects.get(user=item.current_bidder)
-		if json.loads(item.auction_type)["type"] == "increment":
-			person.balance -= item.current_value
-			person.reserved_balance -= item.current_value
-			person.save()
-		owner = Person.objects.get(user=item.owner)
-		owner.balance += item.current_value
-		owner.save()
-		item.owner = item.current_bidder
-	item.state = 'sold'
-	item.auction_ended_at = datetime.datetime.now()
-	item.save()
+	with transaction.atomic():
+		try:
+			item = SellItem.objects.get(id=item_id)
+			if item.current_bidder:
+				person = Person.objects.get(user=item.current_bidder)
+		except:
+			return redirect('/ciftlikbank')
+		if not item.owner_id == request.user.id:
+			return view_item(request,item_id)
+		if not item.state == 'active':
+			return view_item(request,item_id)
+		
+		item.old_owner = item.owner
+		if person:
+			if json.loads(item.auction_type)["type"] == "increment":
+				person.balance -= item.current_value
+				person.reserved_balance -= item.current_value
+				person.save()
+			owner = Person.objects.get(user=item.owner)
+			owner.balance += item.current_value
+			owner.save()
+			item.owner = item.current_bidder
+		item.state = 'sold'
+		item.auction_ended_at = datetime.datetime.now()
+		item.save()
 	return view_item(request,item_id)
 
 @login_required

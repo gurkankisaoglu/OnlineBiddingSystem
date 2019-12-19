@@ -22,6 +22,7 @@ STATES = (
 
 class SellItem(models.Model):
     owner = models.ForeignKey(User, related_name='owner',on_delete=models.CASCADE)
+    old_owner = models.ForeignKey(User, related_name='old_owner',on_delete=models.DO_NOTHING,null=True)
     title = models.CharField(max_length=255)
     itemtype = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
