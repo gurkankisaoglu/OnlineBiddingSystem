@@ -27,7 +27,7 @@ class SellItem(models.Model):
     itemtype = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
     auction_type = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='media', null=True, blank=True)
+    image = models.ImageField(upload_to='', null=True, blank=True)
     state = models.CharField(max_length=6,choices=STATES, default='onhold')
     auction_started = models.BooleanField(default=False)
     current_bidder = models.ForeignKey(User, null=True, related_name='current_bidder', on_delete=models.DO_NOTHING)

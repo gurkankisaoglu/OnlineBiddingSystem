@@ -89,6 +89,7 @@ def withdraw(request,uid):
 def view_item(request,item_id,message=""):
 	try:
 		item = SellItem.objects.get(id=item_id)
+		print(dir(item.image.url))
 	except:
 		return redirect("/ciftlikbank")
 	try:
