@@ -4,6 +4,7 @@ from django.contrib.auth import  authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.db import transaction
+from django.core.mail import send_mail
 from ciftlikbank.models import Person, SellItem, BidRecord
 from django.contrib.auth.models import User
 from ciftlikbank.forms import SignUpForm, SellItemForm
@@ -20,7 +21,7 @@ def sign_in(request):
 			user = authenticate(request, username=username, password=password)
 			if user is not None:
 				login(request, user)   # this sets the session, 
-
+				return redirect("/")
 	else:    
 			return render(request,'login.html',{'form': AuthenticationForm})
 
@@ -52,25 +53,37 @@ def index(request):
 @login_required
 def view_user(request,uid, message=""):
 	try:
-		_person = Person.objects.get(user_id = uid)
-		print(_person)
-		own_items = SellItem.objects.filter(owner_id = uid, old_owner_id__isnull = True)
-																
-		print(own_items)
-		bought_items = SellItem.objects.filter(own_items = uid)\
-																		.exclude(own_items).exclude(old_owner_id=uid)
-		print(bought_items)
-		sold_items = SellItem.object.filter(old_owner_id=uid)
-		print(sold_items)
+		view_person = Person.objects.get(user_id = uid)
+		max_withdraw = view_person.balance - view_person.reserved_balance
+		own_items = SellItem.objects.filter(owner_id = uid )
+		bought_items = SellItem.objects.filter(owner_id = uid,old_owner_id__isnull = False)
+		sold_items = SellItem.objects.filter(old_owner_id = uid)
 	except:
 		return redirect('/ciftlikbank')
 
 	return render(request, "user.html",{
-								'_person': _person, 'own_items': own_items,
+								'view_person': view_person, 'own_items': own_items,
 								'bought_items': bought_items, 'sold_items': sold_items,	
 								"person": Person.objects.get(user_id = request.user.id),
+								"max_withdraw": max_withdraw,
 								"message": message
 								})
+
+@login_required
+def addbalance(request,uid):
+	with transaction.atomic():
+		person = Person.objects.select_for_update().get(user_id=request.user.id)
+		person.balance += int(request.POST.get('addbalance',0))
+		person.save()
+		return view_user(request,uid)
+
+@login_required
+def withdraw(request,uid):
+	with transaction.atomic():
+		person = Person.objects.select_for_update().get(user_id=request.user.id)
+		person.balance -= int(request.POST.get('withdraw',0))
+		person.save()
+		return view_user(request,uid)
 
 @login_required
 def view_item(request,item_id,message=""):
@@ -381,6 +394,12 @@ def register(request):
 			person = Person.objects.create(user=user,namesurname=namesurname,balance=balance,
 											reserved_balance=0,expenses=0,income=0)
 			person.verification_number = secrets.token_urlsafe(32)
+			send_mail(
+				'Ciftlik Bank Verification',
+				'Your Mail: {}\nVerification number: {}\n'.format(email,person.verification_number),
+				'mehmetaydin@ciftlikbank.com',
+				[email,]
+			)
 			print("###############")
 			print("user email => ", email)
 			print("verification number => " ,person.verification_number)
