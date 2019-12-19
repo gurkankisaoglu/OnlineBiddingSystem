@@ -2,6 +2,7 @@
 		
     <body>
 				<h1> CENG 445 Ciftlik Bank Demo </h1>
+				<a href="/ciftlikbank">Main page</a>
 
 		<div align="right" style="margin-left: 710px; float:right">
 		{% if request.user.is_authenticated %}
@@ -17,7 +18,6 @@
 			{% block "body" %} 
 			{% endblock %}
 		</div>
-	<a href="/ciftlikbank">Main page</a>
 		</body>
 
 <style>
@@ -29,5 +29,20 @@
 		padding: 5px;
 		text-align: left;
 	}
+  .container {
+    width: 100%;
+    margin: auto;
+    padding: 10px;
+    height: 100%;
+  }
+  .one {
+    width: 50%;
+    float: left;
+  }
+  .two {
+    width: 50%;
+
+    margin-left: 15%;
+  }
 </style>
 </html>

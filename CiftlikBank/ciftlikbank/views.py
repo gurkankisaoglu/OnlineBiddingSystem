@@ -34,15 +34,40 @@ def index(request):
 	active_items = SellItem.objects.filter(state='active').exclude(owner=owner)
 	sold_items = SellItem.objects.filter(state='sold').exclude(owner=owner)
 	person = Person.objects.get(user_id = request.user.id)
-	print(person.balance)
+	all_users = User.objects.all()
+
 	return render(request,'index.html',
 		{
 			"user_items": user_items,
 			"active_items": active_items,
 			"sold_items": sold_items,
-			"person": person
+			"person": person,
+			"all_users": all_users
 		}
 	)
+
+@login_required
+def view_user(request,uid, message=""):
+	try:
+		_person = Person.objects.get(user_id = uid)
+		print(_person)
+		own_items = SellItem.objects.filter(owner_id = uid, old_owner_id__isnull = True)
+																
+		print(own_items)
+		bought_items = SellItem.objects.filter(own_items = uid)\
+																		.exclude(own_items).exclude(old_owner_id=uid)
+		print(bought_items)
+		sold_items = SellItem.object.filter(old_owner_id=uid)
+		print(sold_items)
+	except:
+		return redirect('/ciftlikbank')
+
+	return render(request, "user.html",{
+								'_person': _person, 'own_items': own_items,
+								'bought_items': bought_items, 'sold_items': sold_items,	
+								"person": Person.objects.get(user_id = request.user.id),
+								"message": message
+								})
 
 @login_required
 def view_item(request,item_id,message=""):
@@ -243,10 +268,6 @@ def sell_item_create(request):
 	return render(request, 'sell_item_form.html', {'form': form, 'message':message, "person": Person.objects.get(user_id = request.user.id)})
 
 
-"""@login_required
-def balance(request):
-	person = Person.objects.filter(user = request.user).select_for_update()"""
-	
 
 def register(request):
 	'''Show and process registration page
