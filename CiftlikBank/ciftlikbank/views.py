@@ -47,12 +47,12 @@ def index(request):
 def view_item(request,item_id,message=""):
 	try:
 		item = SellItem.objects.get(id=item_id)
-	except ObjectDoesNotExist:
-		return redirect("/")
+	except:
+		return redirect("/ciftlikbank")
 	try:
 		bids = BidRecord.objects.filter(item=item_id)
-	except ObjectDoesNotExist:
-		return redirect("/")
+	except :
+		return redirect("/ciftlikbank")
 	
 	return render(request, "item.html",{
 								'item': item, 'bids': bids,	
