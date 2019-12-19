@@ -7,6 +7,8 @@ from django.db import transaction
 from ciftlikbank.models import Person, SellItem, BidRecord
 from django.contrib.auth.models import User
 from ciftlikbank.forms import SignUpForm, SellItemForm
+from background_task import background
+from background_task.tasks import Task
 import json
 import datetime
 import secrets
@@ -95,9 +97,31 @@ def start_auction(request, item_id):
 	if item.state == "onhold":
 		item.auction_started = True
 		item.state = "active"
+		auction_type = json.loads(item.auction_type)
+		if auction_type["type"] == "decrement":
+			t = 5
+			decr_count = (auction_type["starting"]-auction_type["stop"])//auction_type["delta"]+1
+			dt = datetime.datetime.now() + datetime.timedelta(seconds=decr_count*t)
+			decrement_price(item_id, schedule=t, repeat=t, repeat_until=dt)
 		item.auction_started_at = datetime.datetime.now()
 		item.save()
 	return view_item(request,item_id)
+
+@background
+def decrement_price(item_id):
+	print("called with item_id: ", item_id)
+	with transaction.atomic():
+		item = SellItem.objects.select_for_update().get(id=item_id)
+		auction_type = json.loads(item.auction_type)
+		if item.state == 'active':
+			item.current_value -= auction_type["delta"]
+		if item.current_value <= auction_type["stop"]:
+			task = Task.objects.filter(task_params='[["%s"], {}]' % item_id)
+			task.delete()
+			item.old_owner = item.owner
+			item.state = "sold"
+			item.auction_ended_at = datetime.datetime.now()
+		item.save()
 
 @login_required
 def bid_item(request, item_id):
@@ -106,6 +130,7 @@ def bid_item(request, item_id):
 			try:
 				item = SellItem.objects.select_for_update().get(id=item_id)
 				person = Person.objects.select_for_update().get(user_id=request.user.id)
+				owner = Person.objects.select_for_update().get(user_id=item.owner)
 				if item.current_bidder:
 					current_bidder = Person.objects.select_for_update().get(user_id=item.current_bidder.id)
 			except:
@@ -128,19 +153,22 @@ def bid_item(request, item_id):
 					#user update
 					if item.current_bidder == person.user:
 						person.balance -= amount
+						person.expenses += amount
 						person.reserved_balance -= item.current_value
 						person.save()
-					else:
-						item.current_bidder.reserved_balance -= item.current_value
-						item.current_bidder.save()
+					elif current_bidder:
+						current_bidder.reserved_balance -= item.current_value
+						current_bidder.save()
 					#item update
-					item.owner.balance += item.current_value
-					item.owner.save()
+					owner.balance += amount
+					owner.income += amount
+					owner.save()
 					item.state = "sold"
 					item.auction_ended_at = datetime.datetime.now()
-					item.old_owner = item.owner
+					item.old_owner = owner.user
 					item.owner = request.user
 					item.current_bidder = request.user
+					item.current_value = amount
 					item.save()
 					BidRecord.objects.create(bidder=request.user, bidder_name=request.user.username, 
 											item=item, amount=amount)
@@ -149,9 +177,8 @@ def bid_item(request, item_id):
 					if item.current_bidder == request.user:
 						person.reserved_balance -= item.current_value
 					elif item.current_bidder:
-						curr = Person.objects.get(user_id=item.current_bidder)
-						curr.reserved_balance -= item.current_value
-						curr.save()
+						current_bidder.reserved_balance -= item.current_value
+						current_bidder.save()
 					person.reserved_balance += amount
 					person.save()
 					#item update
@@ -168,37 +195,84 @@ def bid_item(request, item_id):
 					item.current_value += amount
 					item.save()
 					person.balance -= amount
+					person.expenses += amount
 					person.save()
 				else:
 					bids = item.bidrecord_set.filter(bidder=request.user)
 					total_bid = amount
 					for bid in bids:
 						total_bid += bid.amount
-					if total_bid > item.current_value:
-						if total_bid >= auction_type["autosell"]:
-							item.owner.balance += item.current_value
-							item.owner.save()
-							item.old_owner = item.owner
+					
+					current_bids = item.bidrecord_set.filter(bidder=item.current_bidder)
+					max_bidders = 0
+					for b in current_bids:
+						max_bidders += b.amount
+
+					if total_bid >= max_bidders:
+						if amount + item.current_value >= auction_type["autosell"]:
+							owner.balance += item.current_value + amount
+							owner.income += item.current_value + amount
+							owner.save()
+							item.old_owner = owner
+							item.owner = request.user
 							item.state = "sold"
 							item.auction_ended_at = datetime.datetime.now()
-						item.current_value = total_bid
+						item.current_value += amount
 						item.current_bidder = request.user
 						item.save()
 						person.balance -= amount
+						person.expenses += amount
 						person.save()
+					else:
+						if amount + item.current_value >= auction_type["autosell"]:
+							owner.balance += item.current_value + amount
+							owner.income += item.current_value + amount
+							owner.save()
+							item.old_owner = owner
+							item.owner = item.current_bidder
+							item.state = "sold"
+							item.auction_ended_at = datetime.datetime.now()
+						item.current_value += amount
+						item.save()
+						person.balance -= amount
+						person.expenses += amount
+						person.save()
+						
 				BidRecord.objects.create(bidder=request.user, 
 										bidder_name=request.user.username, 
 										item=item, amount=amount)
+			elif auction_type["type"] == "decrement":
+				if amount >= item.current_value:
+					item.current_bidder = request.user
+					item.current_value = amount
+					item.state = 'sold'
+					item.auction_ended_at = datetime.datetime.now()
+					item.old_owner = owner.user
+					item.owner = request.user
+					item.save()
+
+					owner.balance += amount
+					owner.income += amount
+					owner.save()
+
+					person.balance -= amount
+					person.expenses += amount
+					person.save()
 
 			return view_item(request, item_id)
 
 @login_required
 def sell_item(request,item_id):
 	with transaction.atomic():
+		task = Task.objects.filter(task_params='[["%s"], {}]' % item_id)
+		if task:
+			task.delete()
 		try:
 			item = SellItem.objects.get(id=item_id)
 			if item.current_bidder:
 				person = Person.objects.get(user=item.current_bidder)
+			else:
+				person = None
 		except:
 			return redirect('/ciftlikbank')
 		if not item.owner_id == request.user.id:
@@ -256,7 +330,9 @@ def sell_item_create(request):
 				_auction_type["type"] = auction_type[0]
 				_auction_type["period"] = int(auction_type[1])
 				_auction_type["delta"] = int(auction_type[2])
-				_auction_type["stopbid"] = int(auction_type[3])
+				_auction_type["stop"] = int(auction_type[3])
+				_auction_type["starting"] = int(auction_type[4])
+				starting = int(auction_type[4])
 
 			elif auction_type[0] == 'instantincrement':
 				_auction_type["type"] = auction_type[0]
@@ -264,12 +340,19 @@ def sell_item_create(request):
 				_auction_type["autosell"] = int(auction_type[2])
 
 			_auction_type = json.dumps(_auction_type)
-
-			SellItem.objects.create(
-				owner=owner, title=title, itemtype=itemtype,
-				description=description, auction_type=_auction_type,
-				image=image
-			)
+			
+			if auction_type[0] == "decrement":
+				SellItem.objects.create(
+					owner=owner, title=title, itemtype=itemtype,
+					description=description, auction_type=_auction_type,
+					image=image, current_value=starting
+				)
+			else:
+				SellItem.objects.create(
+					owner=owner, title=title, itemtype=itemtype,
+					description=description, auction_type=_auction_type,
+					image=image
+				)
 	
 			message = "SellItem Created with title:{}".format(title)
 	else:

@@ -18,6 +18,8 @@ class SellItemForm(forms.Form):
     title = forms.CharField(max_length=30)
     itemtype = forms.CharField(max_length=30)
     description = forms.CharField(max_length=30)
-    auction_type = forms.CharField(max_length=30,help_text='example: increment,mindelta,instantsell')
+    auction_type = forms.CharField(max_length=30,help_text='example: (increment,mindelta,instantsell) '
+                                                            + '(decrement, period, delta, stop, starting_bid) '
+                                                            + '(instantincrement, minbid, autosell)')
     image = forms.ImageField()
     

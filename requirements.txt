@@ -3,3 +3,4 @@ apscheduler
 Django==2.2
 Pillow
 mysqlclient
+django-background-tasks
