@@ -112,7 +112,7 @@ def start_auction(request, item_id):
 		item.state = "active"
 		auction_type = json.loads(item.auction_type)
 		if auction_type["type"] == "decrement":
-			t = 5
+			t = auction_type["period"]*60
 			decr_count = (auction_type["starting"]-auction_type["stop"])//auction_type["delta"]+1
 			dt = datetime.datetime.now() + datetime.timedelta(seconds=decr_count*t)
 			decrement_price(item_id, schedule=t, repeat=t, repeat_until=dt)
@@ -129,7 +129,7 @@ def decrement_price(item_id):
 		if item.state == 'active':
 			item.current_value -= auction_type["delta"]
 		if item.current_value <= auction_type["stop"]:
-			task = Task.objects.filter(task_params='[["%s"], {}]' % item_id)
+			task = Task.objects.select_for_update().filter(task_params='[["%s"], {}]' % item_id)
 			task.delete()
 			item.old_owner = item.owner
 			item.state = "sold"
@@ -162,7 +162,7 @@ def bid_item(request, item_id):
 				#make bid operations
 				if amount - item.current_value < auction_type["mindelta"] or amount > remaining_balance:
 					return view_item(request, item_id, message="Wrong amount!")
-				elif amount > auction_type["instantsell"]:
+				elif amount >= auction_type["instantsell"]:
 					#user update
 					if item.current_bidder == person.user:
 						person.balance -= amount
@@ -277,7 +277,7 @@ def bid_item(request, item_id):
 @login_required
 def sell_item(request,item_id):
 	with transaction.atomic():
-		task = Task.objects.filter(task_params='[["%s"], {}]' % item_id)
+		task = Task.objects.select_for_update().filter(task_params='[["%s"], {}]' % item_id)
 		if task:
 			task.delete()
 		try:
