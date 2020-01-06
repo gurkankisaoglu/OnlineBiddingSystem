@@ -1,8 +1,15 @@
 <html>
-		
-    <body>
-				<h1> CENG 445 Ciftlik Bank Demo </h1>
-				<a href="/ciftlikbank">Main page</a>
+	<head>
+		<title>Ciftlikbank Demo</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	</head>
+	<body class="bg-light text-dark">
+		<h1> CENG 445 Ciftlik Bank Demo </h1>
+		<a href="/ciftlikbank">Main page</a>
 
 		<div align="right" style="margin-left: 710px; float:right">
 		{% if request.user.is_authenticated %}
@@ -15,11 +22,11 @@
 				<a href="/accounts/logout?next=/ciftlikbank">Logout</a>
 		{% endif %}
 		</div>
-		<div>
+		<div class="pt-2">
 			{% block "body" %} 
 			{% endblock %}
 		</div>
-		</body>
+	</body>
 
 <style>
 	table, th, td {
@@ -29,6 +36,9 @@
 	th, td {
 		padding: 5px;
 		text-align: left;
+	}
+	a{
+		color: steelblue;
 	}
   .container {
     width: 100%;
@@ -44,5 +54,9 @@
     width: 50%;
     margin-left: 50%;
   }
+  .login {
+    margin-left: 30px;
+  }
+
 </style>
 </html>
