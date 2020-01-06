@@ -169,49 +169,49 @@ def bid_item(request, item_id):
 						person.balance -= amount
 						person.expenses += amount
 						person.reserved_balance -= item.current_value
-						person.save()
 					else:
-						print(person)
 						person.balance -= amount
 						person.expenses += amount
-						person.save()
 
 					
 					if current_bidder:
 						current_bidder.reserved_balance -= item.current_value
-						current_bidder.save()
 
 					#item update
 					owner.balance += amount
 					owner.income += amount
-					owner.save()
 					item.state = "sold"
 					item.auction_ended_at = datetime.datetime.now()
 					item.old_owner = owner.user
 					item.owner = request.user
 					item.current_bidder = request.user
 					item.current_value = amount
-					item.save()
 					BidRecord.objects.create(bidder=request.user, bidder_name=request.user.username, 
 											item=item, amount=amount)
+					person.save()
+					owner.save()
+					if current_bidder:
+						current_bidder.save()
+					item.save()
 				else:
 					#user update
 					if item.current_bidder == request.user:
 						person.reserved_balance -= item.current_value
 					elif item.current_bidder:
 						current_bidder.reserved_balance -= item.current_value
-						current_bidder.save()
 					person.reserved_balance += amount
-					person.save()
 					#item update
 					item.current_value = amount
 					item.current_bidder = request.user
-					item.save()
 					BidRecord.objects.create(bidder=request.user, 
 											bidder_name=request.user.username, 
 											item=item, amount=amount)
+					if current_bidder:
+						current_bidder.save()
+					item.save()
+					person.save()
 			elif auction_type["type"] == "instantincrement":
-				if not (amount > auction_type["minbid"] and amount <= person.balance - person.reserved_balance):
+				if not (amount >= auction_type["minbid"] and amount <= person.balance - person.reserved_balance):
 					return view_item(request, item_id, message="Wrong amount!")
 				if item.current_bidder == request.user:
 					item.current_value += amount
@@ -272,6 +272,8 @@ def bid_item(request, item_id):
 					item.old_owner = owner.user
 					item.owner = request.user
 					item.save()
+					task = Task.objects.select_for_update().filter(task_params='[["%s"], {}]' % item_id)
+					task.delete()
 
 					owner.balance += amount
 					owner.income += amount
@@ -349,6 +351,8 @@ def sell_item_create(request):
 				_auction_type["type"] = auction_type[0]
 				_auction_type["mindelta"] = int(auction_type[1])
 				_auction_type["instantsell"] = int(auction_type[2])
+				_auction_type["starting"] = int(auction_type[3])
+				starting = int(auction_type[3])
 
 			elif auction_type[0] == 'decrement':
 				_auction_type["type"] = auction_type[0]
@@ -362,21 +366,15 @@ def sell_item_create(request):
 				_auction_type["type"] = auction_type[0]
 				_auction_type["minbid"] = int(auction_type[1])
 				_auction_type["autosell"] = int(auction_type[2])
+				starting = 0
 
 			_auction_type = json.dumps(_auction_type)
-			
-			if auction_type[0] == "decrement":
-				SellItem.objects.create(
-					owner=owner, title=title, itemtype=itemtype,
-					description=description, auction_type=_auction_type,
-					image=image, current_value=starting
-				)
-			else:
-				SellItem.objects.create(
-					owner=owner, title=title, itemtype=itemtype,
-					description=description, auction_type=_auction_type,
-					image=image
-				)
+
+			SellItem.objects.create(
+				owner=owner, title=title, itemtype=itemtype,
+				description=description, auction_type=_auction_type,
+				image=image, current_value=starting
+			)
 	
 			message = "SellItem Created with title:{}".format(title)
 	else:
