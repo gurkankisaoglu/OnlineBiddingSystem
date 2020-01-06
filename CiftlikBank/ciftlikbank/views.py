@@ -13,6 +13,7 @@ from background_task.tasks import Task
 import json
 import datetime
 import secrets
+from django.http import JsonResponse
 
 def sign_in(request):
 	if 'username' in request.POST and 'password' in request.POST:
@@ -118,7 +119,8 @@ def start_auction(request, item_id):
 			decrement_price(item_id, schedule=t, repeat=t, repeat_until=dt)
 		item.auction_started_at = datetime.datetime.now()
 		item.save()
-	return view_item(request,item_id)
+	
+	return JsonResponse({"msg": "start auction button is pressed!"})
 
 @background
 def decrement_price(item_id):

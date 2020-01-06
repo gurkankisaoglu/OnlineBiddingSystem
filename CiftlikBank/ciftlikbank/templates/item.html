@@ -75,7 +75,7 @@
         {% ifequal user item.owner %}
         <div style="width: 100%;">
           <div style="width: 100px; float: left;">
-            <form action="/ciftlikbank/view/start_auction/{{item.id}}">
+            <form id="start_auction_button" action="/ciftlikbank/view/start_auction/{{item.id}}">
               <input type="submit" value="Start Auction" />
             </form>
           </div>
@@ -125,6 +125,18 @@
         </div>
       </div>
   </div>
+  <script>
   
+    $("#start_auction_button").submit( function(e) {
+      e.preventDefault();
+      var form = $(this);
+      var url = form.attr('action')
+
+      $.get(url,function (e){
+        console.log(e);
+      });
+    })
+
+  </script>
 {% endblock %}
 
