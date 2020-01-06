@@ -13,22 +13,20 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations
 // under the License.
-
 $(document).ready(function() {
 	// startup operations when document is loaded
     if (!window.console) window.console = {};
     if (!window.console.log) window.console.log = function() {};
-    
-    updater.start();
+		updater.start();
+		console.log("{{request.user}}")
 });
 
 var updater = {  // web socket object gets updatemodel requests
     socket: null,
 
     start: function() {
-        var url = "ws://127.0.0.1:8800/chatsocket";
+        var url = "ws://"+ location.host + "/websocket";
 				updater.socket = new WebSocket(url);
-				console.log(updater.socket);
         updater.socket.onmessage = function(event) {
 					// when a new message is received, parse and update model
 					console.log(event);
@@ -41,7 +39,6 @@ var updater = {  // web socket object gets updatemodel requests
 			// op: update model command coming from server
 			var notifymess;
 			var notifybg;
-			console.log("##",op);
 			console.log(op.message);
 			if (op.error) {  // notification color based on error or success
 				notifymess = op.error;

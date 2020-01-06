@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -133,3 +134,8 @@ STATIC_URL = '/static/'
 # Uploaded Files
 MEDIA_URL = '/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# ASGI
+
+ASGI_APPLICATION = 'CiftlikBank.routing.application'
