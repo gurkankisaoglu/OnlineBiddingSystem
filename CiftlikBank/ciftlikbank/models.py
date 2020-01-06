@@ -66,8 +66,14 @@ class BidRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
+NOTIFICATION_TYPES = (
+    ('item', 'ITEM'),
+    ('user', 'USER')
+)
 
 class UserNotification(models.Model):
-    user = models.ForeignKey(Person, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     message = models.CharField(max_length=100)
+    notification_type = models.CharField(max_length=4, choices=NOTIFICATION_TYPES, null=True)
+    item_id = models.IntegerField(null=True, blank=True)
+    itemtype = models.CharField(max_length=255, null=True)

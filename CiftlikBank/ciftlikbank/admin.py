@@ -10,8 +10,11 @@ class SellItemAdmin(admin.ModelAdmin):
 class BidRecordAdmin(admin.ModelAdmin):
   list_display = ("bidder", "item", "amount", "created_at")
 
+class UserNotificationAdmin(admin.ModelAdmin):
+  list_display = ("user", "notification_type", "item_id", "itemtype")
+
 # Register your models here.
 admin.site.register(Person, PersonAdmin)
 admin.site.register(SellItem, SellItemAdmin)
 admin.site.register(BidRecord, BidRecordAdmin)
-admin.site.register(UserNotification)
+admin.site.register(UserNotification, UserNotificationAdmin)

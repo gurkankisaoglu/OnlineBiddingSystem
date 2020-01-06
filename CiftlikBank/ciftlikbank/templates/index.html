@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block "body" %}
 <p><a href="{% url 'sell_item_create' %}">Create SellItem</a></p>
-
   <div class='container'>
     <div class='one'>
       <h3>User Items</h3>
@@ -74,7 +73,13 @@
           </tr>
         {% endfor %}
       </table>
+
     </div>
+    <form id="user_watch" method="POST" action="/ciftlikbank/view/user_watch/{{item.id}}" style="margin-top: 25px;">
+      {% csrf_token %}
+      <input type="text" name="itemtype" placeholder="Itemtype" required/>
+      <input type="submit" value="Watch this item type"/>
+    </form>
   </div>
 
 

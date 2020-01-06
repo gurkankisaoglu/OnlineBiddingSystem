@@ -88,6 +88,9 @@
           </div>
         </div>
         {% endifequal %}
+        <form id="item_watch" action="/ciftlikbank/view/item_watch/{{item.id}}">
+          <input type="submit" value="Watch this item"/>
+        </form>
       </div>
       
       <div style="margin-left: 700px;"> 
@@ -138,6 +141,20 @@
       });
     })
 
+    $("#item_watch").submit( function(e) {
+      // Make the start button disable
+      $("#item_watch input[type=submit]").attr("disabled",true);
+      
+      // To prevent default action behaviour of button
+      e.preventDefault();
+      var form = $(this);
+      var url = form.attr('action')
+
+      $.get(url,function (e){
+        console.log(e);
+        updater.socket.send(e);
+      });
+    })
   </script>
 {% endblock %}
 

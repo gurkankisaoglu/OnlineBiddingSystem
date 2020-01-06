@@ -17,4 +17,6 @@ urlpatterns = [
     url(r'^view/sell_item/(?P<item_id>[0-9]+)', views.sell_item),
     url(r'^view/bid_item/(?P<item_id>[0-9]+)', views.bid_item),
     url(r'^view/delete_item/(?P<item_id>[0-9]+)', views.delete_item),
+    url(r'^view/user_watch/', views.user_watch),
+    url(r'^view/item_watch/(?P<item_id>[0-9]+)', views.item_watch),
 ]

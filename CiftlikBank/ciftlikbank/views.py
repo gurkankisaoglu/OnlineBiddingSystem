@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.db import transaction
 from django.core.mail import send_mail
-from ciftlikbank.models import Person, SellItem, BidRecord
+from ciftlikbank.models import Person, SellItem, BidRecord, UserNotification
 from django.contrib.auth.models import User
 from ciftlikbank.forms import SignUpForm, SellItemForm
 from background_task import background
@@ -290,7 +290,12 @@ def bid_item(request, item_id):
 					person.balance -= amount
 					person.expenses += amount
 					person.save()
-
+			notf_records = UserNotification.objects.filter(item_id=item_id)
+			users = [obj.user.id for obj in notf_records]
+			SockConsumer.send_notification(users, { 
+				"op": "notification",
+				"message": "Someone bid to item {}".format(item.title)
+				})
 			return view_item(request, item_id)
 
 @login_required
@@ -385,6 +390,12 @@ def sell_item_create(request):
 			)
 	
 			message = "SellItem Created with title:{}".format(title)
+			notf_records = UserNotification.objects.filter(itemtype=itemtype)
+			users = [obj.user.id for obj in notf_records]
+			SockConsumer.send_notification(users, { 
+				"op": "notification",
+				"message":message
+				})
 	else:
 		form = SellItemForm()
 	return render(request, 'sell_item_form.html', {'form': form, 'message':message, "person": Person.objects.get(user_id = request.user.id)})
@@ -441,3 +452,16 @@ def verify(request):
 		return redirect('/accounts/logout?next=/ciftlikbank')
 	else:
 		return render(request, 'verify.html')
+
+def user_watch(request):
+	if request.method == "POST":
+		itemtype = request.POST.get("itemtype")
+		UserNotification.objects.create(user=request.user, message="message",
+							notification_type='user', itemtype=itemtype)
+		
+	return JsonResponse({"msg": "Registered to itemtype => {}".format(itemtype)})
+
+def item_watch(request, item_id):
+	UserNotification.objects.create(user=request.user, message="message",
+						notification_type='user', item_id=item_id)
+	return JsonResponse({"msg": "Registered to itemid => {}".format(item_id)})

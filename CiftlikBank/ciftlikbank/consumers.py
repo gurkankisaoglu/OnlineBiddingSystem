@@ -24,3 +24,8 @@ class SockConsumer(WebsocketConsumer):
   def broadcast(cls, msg):
     for w in SockConsumer.waiters:
       SockConsumer.waiters[w].send(text_data=json.dumps(msg))
+  
+  @classmethod
+  def send_notification(cls, users, msg):
+    for user in users:
+      SockConsumer.waiters[str(user)].send(text_data=json.dumps(msg))
