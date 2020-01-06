@@ -28,6 +28,7 @@
 			{% block "body" %} 
 			{% endblock %}
 		</div>
+		<div id="notification"></div>
 	</body>
 
 {% if request.user.is_authenticated %}
@@ -98,6 +99,14 @@
   }
   .login {
     margin-left: 30px;
+  }
+
+  #notification {
+	position: "absolute";
+	top: "5px";
+	left: "100px";
+	border: "1px";
+	background-color: "#f0f0ff";
   }
 
 </style>
