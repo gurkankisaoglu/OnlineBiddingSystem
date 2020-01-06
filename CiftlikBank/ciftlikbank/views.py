@@ -14,6 +14,8 @@ import json
 import datetime
 import secrets
 from django.http import JsonResponse
+from ciftlikbank.consumers import SockConsumer
+
 
 def sign_in(request):
 	if 'username' in request.POST and 'password' in request.POST:
@@ -119,7 +121,11 @@ def start_auction(request, item_id):
 			decrement_price(item_id, schedule=t, repeat=t, repeat_until=dt)
 		item.auction_started_at = datetime.datetime.now()
 		item.save()
-	
+
+	SockConsumer.broadcast({
+		"op": "item_view_change",
+		"item": item.table_start_auction()
+	})
 	return JsonResponse({"msg": "start auction button is pressed!"})
 
 @background

@@ -40,6 +40,24 @@ class SellItem(models.Model):
     def __str__(self):
         return self.title
 
+    def table_start_auction(self):
+        # do not send image it will not change
+        return {
+            "id": self.id,
+            #"1": str(self.owner),
+            #"9": str(self.old_owner),
+            #"itemtype": self.itemtype,
+            #"description": self.description,
+            #"auction_type": self.auction_type,
+            "4": self.state,
+            "6": self.auction_started,
+            "7": str(self.auction_started_at),
+            #"8": str(self.auction_ended_at),
+            #"10": str(self.current_bidder),
+            #"11": self.current_value,
+            #"item_created_at": str(self.created_at)
+        }
+
 class BidRecord(models.Model):
     bidder =  models.ForeignKey(User, on_delete=models.CASCADE)
     bidder_name = models.CharField(max_length=255, null=True)

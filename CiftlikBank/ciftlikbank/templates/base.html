@@ -63,8 +63,15 @@
 					
 			},
 	
-			updateModel: function(op) {
-				
+			updateModel: function(data){
+				switch(data["op"]){
+					case "item_view_change":
+					$("#item_view_"+data["item"].id+" tr td").each(function(index){
+						if(data["item"][index])
+							$(this).text(data["item"][index])
+					});
+					break;
+				}
 			}
 	};
 </script>	

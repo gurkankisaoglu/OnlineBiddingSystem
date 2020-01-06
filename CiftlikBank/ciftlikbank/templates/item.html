@@ -1,20 +1,10 @@
 {% extends 'base.html' %}
 {% block "body" %}
-  {{message}}
-  <h3>Item Page</h3>
-  {% if item.auction_started %}
-    Auction is started at {{item.auction_started_at}}
-    <br>
-    {% if item.auction_ended_at %}
-    Auction is ended at {{item.auction_ended_at}} <br>
-    {% endif %}
-  {% else %}
-  Auction is not started yet!
-  {% endif %}
+
   <div style="width: 100%; overflow: hidden;">
       <div style="width: 680px; float: left;"> 
         <h4>Item View</h4>
-        <table style="width:100%">
+        <table id="item_view_{{item.id}}" style="width:100%">
             <tr>
               <th>Title</th>
               <td>{{item.title}}</td>
@@ -75,17 +65,21 @@
         {% ifequal user item.owner %}
         <div style="width: 100%;">
           <div style="width: 100px; float: left;">
+            {% if item.auction_started %}
+            <form id="start_auction_button" action="/ciftlikbank/view/start_auction/{{item.id}}">
+              <input type="submit" value="Start Auction" disabled />
+            </form>
+            {% else %}
             <form id="start_auction_button" action="/ciftlikbank/view/start_auction/{{item.id}}">
               <input type="submit" value="Start Auction" />
             </form>
+            {% endif %}
           </div>
          
           <div style="margin-left: 30px; width:100px; float: left; ">
-            {% if item.auction_started %}
-            <form action="/ciftlikbank/view/sell_item/{{item.id}}">
-              <input type="submit" value="Sell Item" />
+            <form id="sell_item_button" action="/ciftlikbank/view/sell_item/{{item.id}}">
+              <input type="submit" value="Sell Item" disabled/>
             </form>
-            {% endif %}
           </div>
           <div style=" margin-left:30px; width:100px; float: left;">
               <form action="/ciftlikbank/view/delete_item/{{item.id}}">
@@ -128,6 +122,13 @@
   <script>
   
     $("#start_auction_button").submit( function(e) {
+      // Make the start button disable
+      $("#start_auction_button input[type=submit]").attr("disabled",true);
+      
+      // Make the sell button enable
+      $("#sell_item_button input[type=submit]").attr("disabled",false);
+      
+      // To prevent default action behaviour of button
       e.preventDefault();
       var form = $(this);
       var url = form.attr('action')

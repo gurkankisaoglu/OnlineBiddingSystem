@@ -19,3 +19,8 @@ class SockConsumer(WebsocketConsumer):
     if(msg["op"] == "socket_open"):
       SockConsumer.waiters[msg["user_id"]] = self
     self.send(text_data=json.dumps({"msg":"msmsmsmsmmsms"}))
+  
+  @classmethod
+  def broadcast(cls, msg):
+    for w in SockConsumer.waiters:
+      SockConsumer.waiters[w].send(text_data=json.dumps(msg))
