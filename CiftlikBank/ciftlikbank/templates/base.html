@@ -17,8 +17,8 @@
 			
 			User: {{ request.user }}<br>
 			{% if person %}
-				Balance: {{person.balance}}<br>
-				Reserved Balance: {{person.reserved_balance}}<br>
+				<span id="balance">Balance: {{person.balance}}</span><br>
+				<span id="reserved_balance">Reserved Balance: {{person.reserved_balance}}</span><br>
 			{% endif %}
 				<a href="/accounts/password_change?next=/ciftlikbank">Change Password!</a><br>
 				<a href="/accounts/logout?next=/ciftlikbank">Logout</a>
@@ -87,7 +87,7 @@
 						}
 					break;
 					case "item_deleted":
-						if(window.location.href.indexOf("/view/"+data["item_id"])){
+						if(window.location.href.indexOf("/view/"+data["item_id"])>-1){
 							alert("item is now deleted. Redirected to main page");
 							window.location.replace("http://127.0.0.1:8000/ciftlikbank/");
 						}
@@ -98,6 +98,16 @@
                 <td>"+data["amount"]+"</td>\
                 <td>"+data["created_at"]+"</td>\
               </tr>")
+					break;
+					case "user_change":
+						$("#user_info_"+data["u"].id+" tr td").each(function(index){
+							if(data["u"][index])
+								$(this).text(data["u"][index])
+						});
+						if("{{request.user.id}}" == data["u"].id){
+							$("#balance").text("Balance: "+data["u"]["1"])
+							$("#reserved_balance").text("Reserved Balance: "+data["u"]["2"])
+						}
 					break;
 					case "notification":
 						$("#notification").text(data["message"])

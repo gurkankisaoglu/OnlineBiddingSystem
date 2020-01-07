@@ -14,6 +14,18 @@ class Person(models.Model):
     def __str__(self):
         return self.namesurname
 
+
+    def table_user(self):
+        return {
+            "id": self.user.id,
+            "1": self.balance,
+            "2": self.reserved_balance,
+            "3": self.expenses,
+            "4": self.income
+        }
+
+
+
 STATES = (
     ('onhold', 'ONHOLD'),
     ('active', 'ACTIVE'),

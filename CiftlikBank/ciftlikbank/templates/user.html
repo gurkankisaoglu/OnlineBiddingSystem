@@ -59,7 +59,7 @@
     </div> 
     <div class='two'>
       <h3>User Info</h3>
-      <table style="width:50%">
+      <table id="user_info_{{view_person.user.id}}" style="width:50%">
         <tr>
           <th>Username</th>
           <td>{{view_person.user.username}}</td>
@@ -84,12 +84,12 @@
       
       {% if request.user.id == view_person.user.id %}
       <br>
-      <form method="POST" action="/ciftlikbank/user_view/addbalance/{{request.user.id}}">
+      <form id="add_balance_{{request.user.id}}"method="POST" action="/ciftlikbank/user_view/addbalance/{{request.user.id}}">
           {% csrf_token %}
           <input type="number" name="addbalance" min="0" required>
           <button type="submit">Add Balance</button>
       </form> <br>
-      <form method="POST" action="/ciftlikbank/user_view/withdraw/{{request.user.id}}">
+      <form id="withdraw_{{request.user.id}}" method="POST" action="/ciftlikbank/user_view/withdraw/{{request.user.id}}">
           {% csrf_token %}
           <input type="number" name="withdraw" min="0" max="{{max_withdraw}}" required>
           <button type="submit">Withdraw</button>
@@ -97,5 +97,33 @@
       {% endif %}
     </div>
   </div>
+
+  <script type="text/javascript">
+    $('#add_balance_{{request.user.id}}').submit( function(e) {
+      // Make the sell button disable
+
+      e.preventDefault();
+      var form = $(this);
+      var url = form.attr('action')
+
+      $.post(url,form.serialize(), function(e) {
+        console.log(e);
+      })
+
+    });
+    $('#withdraw_{{request.user.id}}').submit( function(e) {
+      // Make the sell button disable
+
+      e.preventDefault();
+      var form = $(this);
+      var url = form.attr('action')
+
+      $.post(url,form.serialize(), function(e) {
+        console.log(e);
+      })
+
+    });
+
+  </script>
 {% endblock %}
 

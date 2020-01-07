@@ -78,7 +78,12 @@ def addbalance(request,uid):
 		person = Person.objects.select_for_update().get(user_id=request.user.id)
 		person.balance += int(request.POST.get('addbalance',0))
 		person.save()
-		return view_user(request,uid)
+		SockConsumer.broadcast({
+			"op": "user_change",
+			"u": person.table_user()
+		})
+		
+		return JsonResponse({"msg":"add balance"})
 
 @login_required
 def withdraw(request,uid):
@@ -86,7 +91,11 @@ def withdraw(request,uid):
 		person = Person.objects.select_for_update().get(user_id=request.user.id)
 		person.balance -= int(request.POST.get('withdraw',0))
 		person.save()
-		return view_user(request,uid)
+		SockConsumer.broadcast({
+			"op": "user_change",
+			"u": person.table_user()
+		})
+		return JsonResponse({"msg":"withdraw"})
 
 @login_required
 def view_item(request,item_id,message=""):
@@ -307,7 +316,7 @@ def bid_item(request, item_id):
 			SockConsumer.send_notification(users, { 
 				"op": "notification",
 				"message": "Someone bid to item {}".format(item.title)
-				})
+			})
 			SockConsumer.broadcast({
 				"op": "bid_record_add",
 				"item_id": item.id,
@@ -321,6 +330,22 @@ def bid_item(request, item_id):
 				"op": "item_view_change",
 				"item": item.table_add_bid()
 			})
+
+			# USER CHANGES
+			SockConsumer.broadcast({
+				"op": "user_change",
+				"u": Person.objects.get(user = item.owner).table_user()
+			})
+			if item.old_owner:
+				SockConsumer.broadcast({
+					"op": "user_change",
+					"u": Person.objects.get(user = item.owner).table_user()
+				})
+			if item.current_bidder:
+				SockConsumer.broadcast({
+					"op": "user_change",
+					"u": Person.objects.get(user = item.current_bidder).table_user()
+				})
 			return JsonResponse({"status":"OK","msg":"Bid!"})
 
 
@@ -369,6 +394,16 @@ def sell_item(request,item_id):
 		"item_id": item.id,
 		"owner": str(item.owner)
 	  })
+		
+	SockConsumer.broadcast({
+		"op": "user_change",
+		"u": item.owner.table_user()
+	})
+	if item.old_owner:
+		SockConsumer.broadcast({
+			"op": "user_change",
+			"u": item.old_owner.table_user()
+		})
 	return JsonResponse({"msg": "sell item button is pressed!"})
 
 @login_required
