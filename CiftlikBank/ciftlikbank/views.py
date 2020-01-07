@@ -437,6 +437,7 @@ def sell_item_create(request):
 				"op": "notification",
 				"message":message
 				})
+			return redirect('/ciftlikbank')
 	else:
 		form = SellItemForm()
 	return render(request, 'sell_item_form.html', {'form': form, 'message':message, "person": Person.objects.get(user_id = request.user.id)})

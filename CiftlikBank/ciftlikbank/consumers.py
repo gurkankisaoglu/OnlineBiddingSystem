@@ -6,7 +6,7 @@ class SockConsumer(WebsocketConsumer):
   waiters = {}
   
   def connect(self):
-    print("connectt")
+    print("connected")
     self.accept()
   
   def disconnect(self,close_code):
