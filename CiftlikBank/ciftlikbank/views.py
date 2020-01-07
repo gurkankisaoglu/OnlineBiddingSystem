@@ -394,7 +394,15 @@ def sell_item(request,item_id):
 		"item_id": item.id,
 		"owner": str(item.owner)
 	  })
-		
+	SockConsumer.broadcast({
+			"op": "user_change",
+			"u": Person.objects.get(user = item.owner).table_user()
+		})
+	if item.old_owner:
+		SockConsumer.broadcast({
+			"op": "user_change",
+			"u": Person.objects.get(user = item.owner).table_user()
+		})
 	SockConsumer.broadcast({
 		"op": "user_change",
 		"u": item.owner.table_user()
