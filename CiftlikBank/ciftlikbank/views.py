@@ -136,6 +136,12 @@ def start_auction(request, item_id):
 		"item": item.table_start_auction(),
 		"action": "started"
 	})
+	notf_records = UserNotification.objects.filter(itemtype=item.itemtype)
+	users = [obj.user.id for obj in notf_records]
+	SockConsumer.send_notification(users, { 
+		"op": "notification",
+		"message": "Item created with {} type and auction started!".format(item.itemtype)
+		})
 	return JsonResponse({"msg": "start auction button is pressed!"})
 
 @background
@@ -151,6 +157,12 @@ def decrement_price(item_id):
 			item.old_owner = item.owner
 			item.state = "sold"
 			item.auction_ended_at = datetime.datetime.now()
+			notf_records = UserNotification.objects.filter(item_id=item_id)
+			users = [obj.user.id for obj in notf_records]
+			SockConsumer.send_notification(users, { 
+				"op": "notification",
+				"message": "Auction of {} ended. There is no bid.".format(item.title)
+			})
 		item.save()
 
 @login_required
@@ -300,6 +312,8 @@ def bid_item(request, item_id):
 					person.expenses += amount
 					person.save()
 
+			
+
 			if item.state == 'sold':
 				SockConsumer.broadcast({
 					"op": "item_view_change",
@@ -310,13 +324,22 @@ def bid_item(request, item_id):
 					"op": "item_sold",
 					"item_id": item.id,
 					"owner": str(item.owner)
-					})		
-			notf_records = UserNotification.objects.filter(item_id=item_id)
-			users = [obj.user.id for obj in notf_records]
-			SockConsumer.send_notification(users, { 
-				"op": "notification",
-				"message": "Someone bid to item {}".format(item.title)
-			})
+					})
+
+				notf_records = UserNotification.objects.filter(item_id=item.id)
+				users = [obj.user.id for obj in notf_records]
+				SockConsumer.send_notification(users, { 
+					"op": "notification",
+					"message": "{} bid {} to item {}. Auction of {} ended. Winner is {}".format(person.user.username, amount, item.title, item.title, item.owner)
+				})
+			else:
+				notf_records = UserNotification.objects.filter(item_id=item.id)
+				users = [obj.user.id for obj in notf_records]
+				SockConsumer.send_notification(users, { 
+					"op": "notification",
+					"message": "{} bid {} to item {}. Highest bidder {}".format(person.user.username, amount, item.title, item.current_bidder)
+				})
+
 			SockConsumer.broadcast({
 				"op": "bid_record_add",
 				"item_id": item.id,
@@ -412,6 +435,13 @@ def sell_item(request,item_id):
 			"op": "user_change",
 			"u": item.old_owner.table_user()
 		})
+
+	notf_records = UserNotification.objects.filter(item_id=item_id)
+	users = [obj.user.id for obj in notf_records]
+	SockConsumer.send_notification(users, { 
+		"op": "notification",
+		"message": "Auction of {} ended. Winner is {}".format(item.title, item.owner)
+	})
 	return JsonResponse({"msg": "sell item button is pressed!"})
 
 @login_required
@@ -474,12 +504,7 @@ def sell_item_create(request):
 			)
 	
 			message = "SellItem Created with title:{}".format(title)
-			notf_records = UserNotification.objects.filter(itemtype=itemtype)
-			users = [obj.user.id for obj in notf_records]
-			SockConsumer.send_notification(users, { 
-				"op": "notification",
-				"message":message
-				})
+			
 			return redirect('/ciftlikbank')
 	else:
 		form = SellItemForm()

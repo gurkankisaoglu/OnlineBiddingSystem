@@ -191,7 +191,8 @@
 
       $.get(url,function (e){
         console.log(e);
-        updater.socket.send(e);
+        e['op'] = 'notification';
+        updater.socket.send(JSON.stringify(e));
       });
     })
   </script>
