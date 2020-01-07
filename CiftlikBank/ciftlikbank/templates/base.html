@@ -39,7 +39,6 @@
 			if (!window.console) window.console = {};
 			if (!window.console.log) window.console.log = function() {};
 			updater.start();
-			console.log("{{request.user}}")
 	});
 	
 	var updater = {  // web socket object gets updatemodel requests
@@ -70,6 +69,35 @@
 						if(data["item"][index])
 							$(this).text(data["item"][index])
 					});
+					if(data["action"]=="started"){
+						if("{{request.user}}"!= data["item"]["1"])
+							$("#add_bid_"+data["item"].id+" input[type=submit]").attr("disabled",false);
+					}
+					else if(data["action"]=="ended"){
+						$("#add_bid_"+data["item"].id+" input[type=submit]").attr("disabled",true);
+					}
+					break;
+					case "item_sold":
+						if("{{request.user}}" == data["owner"]){
+							$("#delete_item_button_"+data["item_id"]+" input[type=submit]").attr("disabled",false);
+						}
+						else{
+							$("#delete_item_button_"+data["item_id"]+" input[type=submit]").attr("disabled",true);
+							$("#sell_item_button_"+data["item_id"]+" input[type=submit]").attr("disabled",true);
+						}
+					break;
+					case "item_deleted":
+						if(window.location.href.indexOf("/view/"+data["item_id"])){
+							alert("item is now deleted. Redirected to main page");
+							window.location.replace("http://127.0.0.1:8000/ciftlikbank/");
+						}
+					break;
+					case "bid_record_add":
+						$("#bid_table_"+data["item_id"]).append("<tr>\
+								<td>"+data["bidder"]+"</td>\
+                <td>"+data["amount"]+"</td>\
+                <td>"+data["created_at"]+"</td>\
+              </tr>")
 					break;
 					case "notification":
 						$("#notification").text(data["message"])

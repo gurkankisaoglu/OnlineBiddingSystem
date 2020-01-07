@@ -124,7 +124,8 @@ def start_auction(request, item_id):
 
 	SockConsumer.broadcast({
 		"op": "item_view_change",
-		"item": item.table_start_auction()
+		"item": item.table_start_auction(),
+		"action": "started"
 	})
 	return JsonResponse({"msg": "start auction button is pressed!"})
 
@@ -157,8 +158,7 @@ def bid_item(request, item_id):
 					current_bidder = None
 			except:
 				return redirect('/ciftlikbank')
-			if item.state != "active":
-				return view_item(request, item_id)
+
 
 			amount = int(request.POST.get("bid_value", 0))
 			auction_type = json.loads(item.auction_type)
@@ -170,7 +170,7 @@ def bid_item(request, item_id):
 					remaining_balance = person.balance - person.reserved_balance
 				#make bid operations
 				if amount - item.current_value < auction_type["mindelta"] or amount > remaining_balance:
-					return view_item(request, item_id, message="Wrong amount!")
+					return JsonResponse({"status":"NOK","msg":"Wrong amount!"})
 				elif amount >= auction_type["instantsell"]:
 					#user update
 					if item.current_bidder == person.user:
@@ -220,7 +220,7 @@ def bid_item(request, item_id):
 					person.save()
 			elif auction_type["type"] == "instantincrement":
 				if not (amount >= auction_type["minbid"] and amount <= person.balance - person.reserved_balance):
-					return view_item(request, item_id, message="Wrong amount!")
+					return JsonResponse({"status":"NOK","msg":"Wrong amount!"})
 				if item.current_bidder == request.user:
 					item.current_value += amount
 					item.save()
@@ -290,13 +290,39 @@ def bid_item(request, item_id):
 					person.balance -= amount
 					person.expenses += amount
 					person.save()
+
+			if item.state == 'sold':
+				SockConsumer.broadcast({
+					"op": "item_view_change",
+					"item": item.table_sell_item(),
+					"action": "ended"
+					})
+				SockConsumer.broadcast({
+					"op": "item_sold",
+					"item_id": item.id,
+					"owner": str(item.owner)
+					})		
 			notf_records = UserNotification.objects.filter(item_id=item_id)
 			users = [obj.user.id for obj in notf_records]
 			SockConsumer.send_notification(users, { 
 				"op": "notification",
 				"message": "Someone bid to item {}".format(item.title)
 				})
-			return view_item(request, item_id)
+			SockConsumer.broadcast({
+				"op": "bid_record_add",
+				"item_id": item.id,
+				"bidder":str(request.user),
+				"amount": amount,
+				"created_at": str(BidRecord.objects.get(bidder=request.user, 
+										bidder_name=request.user.username, 
+										item=item, amount=amount).created_at)
+			})
+			SockConsumer.broadcast({
+				"op": "item_view_change",
+				"item": item.table_add_bid()
+			})
+			return JsonResponse({"status":"OK","msg":"Bid!"})
+
 
 @login_required
 def sell_item(request,item_id):
@@ -332,7 +358,18 @@ def sell_item(request,item_id):
 		item.state = 'sold'
 		item.auction_ended_at = datetime.datetime.now()
 		item.save()
-	return view_item(request,item_id)
+	
+	SockConsumer.broadcast({
+		"op": "item_view_change",
+		"item": item.table_sell_item(),
+		"action": "ended"
+		})
+	SockConsumer.broadcast({
+		"op": "delete_button",
+		"item_id": item.id,
+		"owner": str(item.owner)
+	  })
+	return JsonResponse({"msg": "sell item button is pressed!"})
 
 @login_required
 def delete_item(request,item_id):
@@ -343,6 +380,10 @@ def delete_item(request,item_id):
 		return view_item(request,item_id,"ACTIVE ITEMS CAN NOT BE DELETED")
 	
 	item.delete()
+	SockConsumer.broadcast({
+		"op": "item_deleted",
+		"item_id": item.id
+	})
 	return redirect('/ciftlikbank')
 
 @login_required

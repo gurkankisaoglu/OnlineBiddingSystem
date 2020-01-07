@@ -62,10 +62,9 @@
               <td>{{item.image.url}}</td>
             </tr>
         </table>
-        {% ifequal user item.owner %}
         <div style="width: 100%;">
           <div style="width: 100px; float: left;">
-            {% if item.auction_started %}
+            {% if item.auction_started or user != item.owner%}
             <form id="start_auction_button" action="/ciftlikbank/view/start_auction/{{item.id}}">
               <input type="submit" value="Start Auction" disabled />
             </form>
@@ -77,25 +76,33 @@
           </div>
          
           <div style="margin-left: 30px; width:100px; float: left; ">
-            <form id="sell_item_button" action="/ciftlikbank/view/sell_item/{{item.id}}">
+            <form id="sell_item_button_{{item.id}}" action="/ciftlikbank/view/sell_item/{{item.id}}">
+              {% if item.auction_started and item.state ==  "active" and user == item.owner %}
+              <input type="submit" value="Sell Item"/>          
+              {% else %}
               <input type="submit" value="Sell Item" disabled/>
+              {% endif %}
             </form>
           </div>
           <div style=" margin-left:30px; width:100px; float: left;">
-              <form action="/ciftlikbank/view/delete_item/{{item.id}}">
+              <form id="delete_item_button_{{item.id}}" action="/ciftlikbank/view/delete_item/{{item.id}}">
+                {% if user == item.owner and item.state != "active" %}
                 <input type="submit" value="Delete Item" />
+                {% else %}
+                <input type="submit" value="Delete Item" disabled/>
+                {% endif %}
               </form>
           </div>
         </div>
-        {% endifequal %}
-        <form id="item_watch" action="/ciftlikbank/view/item_watch/{{item.id}}">
+        
+        <form style="margin-left: 30px;" id="item_watch" action="/ciftlikbank/view/item_watch/{{item.id}}">
           <input type="submit" value="Watch this item"/>
         </form>
       </div>
       
       <div style="margin-left: 700px;"> 
         <h4>Bid Records</h4>
-        <table style="width:100%">
+        <table id="bid_table_{{item.id}}" style="width:100%">
             <tr>
               <th>Bidder</th>
               <th>Amount</th>
@@ -110,26 +117,30 @@
             {% endfor %}
         </table>
         <div style="width:100%">
-          {% if item.owner != request.user %}
-            {% if item.state == 'active' %}
-            <form method="POST" action="/ciftlikbank/view/bid_item/{{item.id}}">
+            <form id="add_bid_{{item.id}}" method="POST" action="/ciftlikbank/view/bid_item/{{item.id}}">
               {% csrf_token %}
               <input type="number" name="bid_value" min="0" required/>
+              
+              {% if item.state == 'active' and item.owner != user %}
               <input type="submit" value="Bid" />
+              {% else %}
+              <input type="submit" value="Bid" disabled/>
+              {% endif %}
             </form>
-            {% endif %}
-          {% endif %}
         </div>
       </div>
   </div>
-  <script>
+  <script type="text/javascript">
   
     $("#start_auction_button").submit( function(e) {
       // Make the start button disable
       $("#start_auction_button input[type=submit]").attr("disabled",true);
       
+      // Make the delete button disable
+      $("#delete_item_button_{{item.id}} input[type=submit]").attr("disabled",true);
+
       // Make the sell button enable
-      $("#sell_item_button input[type=submit]").attr("disabled",false);
+      $("#sell_item_button_{{item.id}} input[type=submit]").attr("disabled",false);
       
       // To prevent default action behaviour of button
       e.preventDefault();
@@ -139,7 +150,35 @@
       $.get(url,function (e){
         console.log(e);
       });
-    })
+    });
+
+    $('#sell_item_button_{{item.id}}').submit( function(e) {
+      // Make the sell button disable
+      $("#sell_item_button_{{item.id}} input[type=submit]").attr("disabled",true);
+      
+
+      e.preventDefault();
+      var form = $(this);
+      var url = form.attr('action')
+
+      $.get(url,function(e) {
+        console.log(e);
+      })
+
+    });
+
+    $("#add_bid_{{item.id}}").submit(function(e) {
+      
+      e.preventDefault();
+      var form = $(this);
+      var url = form.attr('action')
+      $.post(url,form.serialize(), function(e){
+        console.log(e);
+        if(e["status"]=="NOK"){
+          alert(e["msg"]);
+        }
+      });
+    });
 
     $("#item_watch").submit( function(e) {
       // Make the start button disable

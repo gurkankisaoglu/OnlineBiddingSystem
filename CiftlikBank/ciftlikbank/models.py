@@ -44,7 +44,7 @@ class SellItem(models.Model):
         # do not send image it will not change
         return {
             "id": self.id,
-            #"1": str(self.owner),
+            "1": str(self.owner),
             #"9": str(self.old_owner),
             #"itemtype": self.itemtype,
             #"description": self.description,
@@ -56,6 +56,25 @@ class SellItem(models.Model):
             #"10": str(self.current_bidder),
             #"11": self.current_value,
             #"item_created_at": str(self.created_at)
+        }
+
+    def table_sell_item(self):
+        return {
+            "id": self.id,
+            "1": str(self.owner),
+            "4": self.state,
+            "6": self.auction_started,
+            "8": str(self.auction_ended_at),
+            "10": str(self.current_bidder),
+            "11": self.current_value,
+            "9": str(self.old_owner)
+        }
+    
+    def table_add_bid(self):
+        return{
+            "id": self.id,
+            "10": str(self.current_bidder),
+            "11": self.current_value
         }
 
 class BidRecord(models.Model):
