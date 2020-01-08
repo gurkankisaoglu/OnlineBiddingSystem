@@ -57,6 +57,7 @@ class SellItem(models.Model):
         return {
             "id": self.id,
             "1": str(self.owner),
+            "2": self.title,
             #"9": str(self.old_owner),
             #"itemtype": self.itemtype,
             #"description": self.description,

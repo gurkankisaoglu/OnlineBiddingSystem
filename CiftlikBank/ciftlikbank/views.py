@@ -323,6 +323,7 @@ def bid_item(request, item_id):
 				SockConsumer.broadcast({
 					"op": "item_sold",
 					"item_id": item.id,
+					"item_name": item.title,
 					"owner": str(item.owner)
 					})
 
@@ -426,15 +427,13 @@ def sell_item(request,item_id):
 			"op": "user_change",
 			"u": Person.objects.get(user = item.owner).table_user()
 		})
+
 	SockConsumer.broadcast({
-		"op": "user_change",
-		"u": item.owner.table_user()
-	})
-	if item.old_owner:
-		SockConsumer.broadcast({
-			"op": "user_change",
-			"u": item.old_owner.table_user()
-		})
+					"op": "item_sold",
+					"item_id": item.id,
+					"item_name": item.title,
+					"owner": str(item.owner)
+					})
 
 	notf_records = UserNotification.objects.filter(item_id=item_id)
 	users = [obj.user.id for obj in notf_records]
@@ -455,7 +454,7 @@ def delete_item(request,item_id):
 	item.delete()
 	SockConsumer.broadcast({
 		"op": "item_deleted",
-		"item_id": item.id
+		"item_id": item_id
 	})
 	return redirect('/ciftlikbank')
 
@@ -544,6 +543,11 @@ def register(request):
 			print("###############")
 			person.save()
 			login(request, user)
+			SockConsumer.broadcast({
+				"op": "user_created",
+				"user_id": user.id,
+				"user_name": user.username
+			})
 			return redirect('home')
 	else:
 		form = SignUpForm()

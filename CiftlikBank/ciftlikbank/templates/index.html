@@ -4,7 +4,7 @@
   <div class='container'>
     <div class='one'>
       <h3>User Items</h3>
-      <table style="width:50%">
+      <table id="user_items_{{request.user.id}}" style="width:50%">
         <tr>
           <th>Title</th>
           <th>State</th>
@@ -22,14 +22,14 @@
       </table>
       
       <h3>Active Items</h3>
-      <table style="width:50%">
+      <table id="active_items_{{request.user.id}}" style="width:50%">
         <tr>
             <th>Title</th>
             <th>State</th>
             <th>Item Link</th>
         </tr>
         {% for item in active_items %}
-          <tr>
+          <tr id={{item.id}}>
             <td>{{item.title}}</td>
             <td>{{item.state}}</td>
             <td>
@@ -40,14 +40,14 @@
       </table>
 
       <h3>Previously Sold Items</h3>
-      <table style="width:50%">
+      <table id="sold_items_{{request.user.id}}" style="width:50%">
         <tr>
             <th>Title</th>
             <th>State</th>
             <th>Item Link</th>
         </tr>
         {% for item in sold_items %}
-          <tr>
+          <tr id={{item.id}}>
             <td>{{item.title}}</td>
             <td>{{item.state}}</td>
             <td>
