@@ -115,6 +115,7 @@
 						$("#user_info_"+data["u"].id+" tr td").each(function(index){
 							if(data["u"][index])
 								$(this).text(data["u"][index])
+								console.log($(this).text())
 						});
 						if("{{request.user.id}}" == data["u"].id){
 							$("#balance").text("Balance: "+data["u"]["1"])

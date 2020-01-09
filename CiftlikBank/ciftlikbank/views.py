@@ -217,10 +217,11 @@ def bid_item(request, item_id):
 					item.current_value = amount
 					BidRecord.objects.create(bidder=request.user, bidder_name=request.user.username, 
 											item=item, amount=amount)
+					
+					if current_bidder and current_bidder != person:
+						current_bidder.save()
 					person.save()
 					owner.save()
-					if current_bidder:
-						current_bidder.save()
 					item.save()
 				else:
 					#user update
@@ -235,7 +236,7 @@ def bid_item(request, item_id):
 					BidRecord.objects.create(bidder=request.user, 
 											bidder_name=request.user.username, 
 											item=item, amount=amount)
-					if current_bidder:
+					if current_bidder and current_bidder != person:
 						current_bidder.save()
 					item.save()
 					person.save()
@@ -365,7 +366,7 @@ def bid_item(request, item_id):
 					"op": "user_change",
 					"u": Person.objects.get(user = item.owner).table_user()
 				})
-			if item.current_bidder:
+			if item.current_bidder != person.user:
 				SockConsumer.broadcast({
 					"op": "user_change",
 					"u": Person.objects.get(user = item.current_bidder).table_user()
